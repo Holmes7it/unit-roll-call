@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, useRef } from "react";
+import { toast } from "sonner";
 import { AppShell } from "@/components/Layout";
 import {
   useSoldiers, usePlatoons, generateId, RANKS, STATUSES, BLOOD_TYPES, GENDERS,
@@ -51,7 +52,9 @@ function AddSoldier() {
       photo: form.photo || PLACEHOLDER_PHOTO,
     };
     addSoldier(soldier);
-    setSuccess(`${soldier.rank} ${soldier.firstName} ${soldier.lastName} (${soldier.serviceNumber}) added successfully.`);
+    const msg = `${soldier.rank} ${soldier.firstName} ${soldier.lastName} (${soldier.serviceNumber}) added successfully.`;
+    setSuccess(msg);
+    toast.success("Soldier added", { description: msg });
     clear();
   };
 
