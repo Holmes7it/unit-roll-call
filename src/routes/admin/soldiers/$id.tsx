@@ -2,7 +2,7 @@ import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { AppShell } from "@/components/Layout";
 import {
-  useSoldiers, isAdminLoggedIn, STATUSES, RANKS, BLOOD_TYPES, PLATOONS, GENDERS,
+  useSoldiers, usePlatoons, isAdminLoggedIn, STATUSES, RANKS, BLOOD_TYPES, GENDERS,
   STATUS_BADGE, formatDate, PLACEHOLDER_PHOTO, type Soldier,
 } from "@/lib/soldiers";
 
@@ -15,6 +15,7 @@ function SoldierProfile() {
   const { id } = Route.useParams();
   const router = useRouter();
   const { soldiers, ready, updateSoldier, deleteSoldier } = useSoldiers();
+  const { platoons } = usePlatoons();
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState<Soldier | null>(null);
   const [confirmDel, setConfirmDel] = useState(false);
@@ -115,7 +116,7 @@ function SoldierProfile() {
               <Row label="Service Number" v={data.serviceNumber} edit={editing} onChange={(v) => setForm({ ...form!, serviceNumber: v })} />
               <Row label="Rank" v={data.rank} edit={editing} options={RANKS} onChange={(v) => setForm({ ...form!, rank: v })} />
               <Row label="Unit" v={data.unitName} edit={editing} onChange={(v) => setForm({ ...form!, unitName: v })} />
-              <Row label="Platoon" v={data.platoon} edit={editing} options={PLATOONS} onChange={(v) => setForm({ ...form!, platoon: v })} />
+              <Row label="Platoon" v={data.platoon} edit={editing} options={platoons} onChange={(v) => setForm({ ...form!, platoon: v })} />
               <Row label="Role" v={data.role} edit={editing} onChange={(v) => setForm({ ...form!, role: v })} />
               <Row label="Date Enlisted" v={editing ? data.dateEnlisted : formatDate(data.dateEnlisted)} edit={editing} type="date" raw={data.dateEnlisted} onChange={(v) => setForm({ ...form!, dateEnlisted: v })} />
               <Row label="Status" v={data.status} edit={editing} options={STATUSES as readonly string[]} onChange={(v) => setForm({ ...form!, status: v as Soldier["status"] })} />

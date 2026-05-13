@@ -33,6 +33,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <NavLink to="/" label="Home" />
           <NavLink to="/add" label="Add Soldier" />
           <NavLink to="/admin" label="Admin Dashboard" />
+          {loggedIn && <NavLink to="/admin/platoons" label="Manage Platoons" />}
           {!loggedIn && <NavLink to="/admin/login" label="Admin Login" />}
         </nav>
         {loggedIn && (
