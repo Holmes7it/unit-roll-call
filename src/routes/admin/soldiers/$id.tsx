@@ -6,7 +6,7 @@ import {
   STATUS_BADGE, formatDate, PLACEHOLDER_PHOTO, type Soldier,
 } from "@/lib/soldiers";
 
-export const Route = createFileRoute("/admin/soldiers/")({
+export const Route = createFileRoute("/admin/soldiers/$id")({
   head: () => ({ meta: [{ title: "Soldier Profile — Unit Registry" }] }),
   component: SoldierProfile,
 });

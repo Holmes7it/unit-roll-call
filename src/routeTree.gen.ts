@@ -13,7 +13,7 @@ import { Route as AddRouteImport } from './routes/add'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as AdminLoginRouteImport } from './routes/admin/login'
-import { Route as AdminSoldiersRouteImport } from './routes/admin/soldiers.'
+import { Route as AdminSoldiersIdRouteImport } from './routes/admin/soldiers/$id'
 
 const AddRoute = AddRouteImport.update({
   id: '/add',
@@ -35,9 +35,9 @@ const AdminLoginRoute = AdminLoginRouteImport.update({
   path: '/admin/login',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AdminSoldiersRoute = AdminSoldiersRouteImport.update({
-  id: '/admin/soldiers/',
-  path: '/admin/soldiers/',
+const AdminSoldiersIdRoute = AdminSoldiersIdRouteImport.update({
+  id: '/admin/soldiers/$id',
+  path: '/admin/soldiers/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
 
@@ -46,14 +46,14 @@ export interface FileRoutesByFullPath {
   '/add': typeof AddRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin/': typeof AdminIndexRoute
-  '/admin/soldiers/': typeof AdminSoldiersRoute
+  '/admin/soldiers/$id': typeof AdminSoldiersIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/add': typeof AddRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin': typeof AdminIndexRoute
-  '/admin/soldiers': typeof AdminSoldiersRoute
+  '/admin/soldiers/$id': typeof AdminSoldiersIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -61,20 +61,20 @@ export interface FileRoutesById {
   '/add': typeof AddRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin/': typeof AdminIndexRoute
-  '/admin/soldiers/': typeof AdminSoldiersRoute
+  '/admin/soldiers/$id': typeof AdminSoldiersIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/add' | '/admin/login' | '/admin/' | '/admin/soldiers/'
+  fullPaths: '/' | '/add' | '/admin/login' | '/admin/' | '/admin/soldiers/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/add' | '/admin/login' | '/admin' | '/admin/soldiers'
+  to: '/' | '/add' | '/admin/login' | '/admin' | '/admin/soldiers/$id'
   id:
     | '__root__'
     | '/'
     | '/add'
     | '/admin/login'
     | '/admin/'
-    | '/admin/soldiers/'
+    | '/admin/soldiers/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -82,7 +82,7 @@ export interface RootRouteChildren {
   AddRoute: typeof AddRoute
   AdminLoginRoute: typeof AdminLoginRoute
   AdminIndexRoute: typeof AdminIndexRoute
-  AdminSoldiersRoute: typeof AdminSoldiersRoute
+  AdminSoldiersIdRoute: typeof AdminSoldiersIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -115,11 +115,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminLoginRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/admin/soldiers/': {
-      id: '/admin/soldiers/'
-      path: '/admin/soldiers'
-      fullPath: '/admin/soldiers/'
-      preLoaderRoute: typeof AdminSoldiersRouteImport
+    '/admin/soldiers/$id': {
+      id: '/admin/soldiers/$id'
+      path: '/admin/soldiers/$id'
+      fullPath: '/admin/soldiers/$id'
+      preLoaderRoute: typeof AdminSoldiersIdRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -130,7 +130,7 @@ const rootRouteChildren: RootRouteChildren = {
   AddRoute: AddRoute,
   AdminLoginRoute: AdminLoginRoute,
   AdminIndexRoute: AdminIndexRoute,
-  AdminSoldiersRoute: AdminSoldiersRoute,
+  AdminSoldiersIdRoute: AdminSoldiersIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
