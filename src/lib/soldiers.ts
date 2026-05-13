@@ -71,7 +71,7 @@ export function toCSV(soldiers: Soldier[]): string {
   };
   const lines = [headers.join(",")];
   for (const s of soldiers) {
-    lines.push(headers.map((h) => escape((s as Record<string, unknown>)[h])).join(","));
+    lines.push(headers.map((h) => escape((s as unknown as Record<string, unknown>)[h])).join(","));
   }
   return lines.join("\n");
 }
