@@ -1,5 +1,6 @@
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import { AppShell } from "@/components/Layout";
 import {
   useSoldiers, usePlatoons, isAdminLoggedIn, STATUSES, RANKS, BLOOD_TYPES, GENDERS,
@@ -57,10 +58,13 @@ function SoldierProfile() {
     if (!form) return;
     updateSoldier(id, form);
     setEditing(false);
+    toast.success("Soldier updated", { description: `${form.rank} ${form.firstName} ${form.lastName} saved.` });
   };
 
   const remove = () => {
+    const name = `${soldier.firstName} ${soldier.lastName}`;
     deleteSoldier(id);
+    toast.success("Soldier deleted", { description: `${name} removed from the registry.` });
     router.navigate({ to: "/admin" });
   };
 
