@@ -2,7 +2,7 @@ import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { AppShell } from "@/components/Layout";
 import {
-  useSoldiers, isAdminLoggedIn, STATUSES, RANKS, PLATOONS, STATUS_BADGE,
+  useSoldiers, usePlatoons, isAdminLoggedIn, STATUSES, RANKS, STATUS_BADGE,
   toCSV, formatDate, type Soldier,
 } from "@/lib/soldiers";
 
@@ -16,6 +16,7 @@ type SortKey = "serviceNumber" | "fullName" | "rank" | "role" | "status" | "date
 function AdminDashboard() {
   const router = useRouter();
   const { soldiers, ready } = useSoldiers();
+  const { platoons } = usePlatoons();
   const [authChecked, setAuthChecked] = useState(false);
 
   const [statusFilter, setStatusFilter] = useState("");
@@ -118,7 +119,7 @@ function AdminDashboard() {
               className="rounded-md border border-slate-300 px-3 py-2 text-sm"
             />
             <Select value={statusFilter} onChange={setStatusFilter} placeholder="All Statuses" options={STATUSES as readonly string[]} />
-            <Select value={platoonFilter} onChange={setPlatoonFilter} placeholder="All Platoons" options={PLATOONS} />
+            <Select value={platoonFilter} onChange={setPlatoonFilter} placeholder="All Platoons" options={platoons} />
             <Select value={rankFilter} onChange={setRankFilter} placeholder="All Ranks" options={RANKS} />
           </div>
         </div>

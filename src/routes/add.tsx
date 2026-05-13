@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState, useRef } from "react";
 import { AppShell } from "@/components/Layout";
 import {
-  useSoldiers, generateId, RANKS, STATUSES, BLOOD_TYPES, PLATOONS, GENDERS,
+  useSoldiers, usePlatoons, generateId, RANKS, STATUSES, BLOOD_TYPES, GENDERS,
   PLACEHOLDER_PHOTO, type Soldier,
 } from "@/lib/soldiers";
 
@@ -20,6 +20,7 @@ const empty = (): Omit<Soldier, "id" | "createdAt"> => ({
 
 function AddSoldier() {
   const { addSoldier } = useSoldiers();
+  const { platoons } = usePlatoons();
   const [form, setForm] = useState(empty());
   const [success, setSuccess] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -105,7 +106,8 @@ function AddSoldier() {
             <Field label="Unit Name"><input className={inputCls} value={form.unitName} onChange={(e) => set("unitName", e.target.value)} /></Field>
             <Field label="Platoon">
               <select className={inputCls} value={form.platoon} onChange={(e) => set("platoon", e.target.value)}>
-                {PLATOONS.map((p) => <option key={p}>{p}</option>)}
+                {platoons.length === 0 && <option value="">No platoons defined</option>}
+                {platoons.map((p) => <option key={p}>{p}</option>)}
               </select>
             </Field>
             <Field label="Role"><input className={inputCls} value={form.role} onChange={(e) => set("role", e.target.value)} placeholder="Rifleman" /></Field>

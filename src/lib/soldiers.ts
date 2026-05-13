@@ -26,6 +26,7 @@ export interface Soldier {
 }
 
 export const STORAGE_KEY = "unit_registry_soldiers";
+export const PLATOONS_STORAGE_KEY = "unit_registry_platoons";
 
 export const RANKS = [
   "Private", "Lance Corporal", "Corporal", "Sergeant", "Staff Sergeant",
@@ -34,7 +35,9 @@ export const RANKS = [
 ];
 export const STATUSES: SoldierStatus[] = ["Active", "On Leave", "Deployed", "Discharged", "Deceased"];
 export const BLOOD_TYPES = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
-export const PLATOONS = ["Alpha", "Bravo", "Charlie", "Delta"];
+export const DEFAULT_PLATOONS = ["Alpha", "Bravo", "Charlie", "Delta"];
+/** @deprecated Use usePlatoons() for the live, admin-editable list. */
+export const PLATOONS = DEFAULT_PLATOONS;
 export const GENDERS = ["Male", "Female"];
 
 export function generateId(): string {
@@ -156,4 +159,79 @@ export const ADMIN_SESSION_KEY = "isAdminLoggedIn";
 export function isAdminLoggedIn(): boolean {
   if (typeof window === "undefined") return false;
   return window.sessionStorage.getItem(ADMIN_SESSION_KEY) === "true";
+}
+
+function readPlatoons(): string[] {
+  if (typeof window === "undefined") return DEFAULT_PLATOONS;
+  try {
+    const raw = window.localStorage.getItem(PLATOONS_STORAGE_KEY);
+    if (!raw) {
+      window.localStorage.setItem(PLATOONS_STORAGE_KEY, JSON.stringify(DEFAULT_PLATOONS));
+      return [...DEFAULT_PLATOONS];
+    }
+    const arr = JSON.parse(raw);
+    return Array.isArray(arr) ? arr.filter((x) => typeof x === "string") : [...DEFAULT_PLATOONS];
+  } catch {
+    return [...DEFAULT_PLATOONS];
+  }
+}
+
+function writePlatoons(list: string[]) {
+  if (typeof window === "undefined") return;
+  window.localStorage.setItem(PLATOONS_STORAGE_KEY, JSON.stringify(list));
+  window.dispatchEvent(new Event("unit_registry_platoons_change"));
+}
+
+export function usePlatoons() {
+  const [platoons, setPlatoons] = useState<string[]>([]);
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    setPlatoons(readPlatoons());
+    setReady(true);
+    const onChange = () => setPlatoons(readPlatoons());
+    window.addEventListener("unit_registry_platoons_change", onChange);
+    window.addEventListener("storage", onChange);
+    return () => {
+      window.removeEventListener("unit_registry_platoons_change", onChange);
+      window.removeEventListener("storage", onChange);
+    };
+  }, []);
+
+  const addPlatoon = useCallback((name: string) => {
+    const trimmed = name.trim();
+    if (!trimmed) return { ok: false as const, error: "Platoon name is required." };
+    const list = readPlatoons();
+    if (list.some((p) => p.toLowerCase() === trimmed.toLowerCase())) {
+      return { ok: false as const, error: "A platoon with that name already exists." };
+    }
+    writePlatoons([...list, trimmed]);
+    return { ok: true as const };
+  }, []);
+
+  const renamePlatoon = useCallback((oldName: string, newName: string) => {
+    const trimmed = newName.trim();
+    if (!trimmed) return { ok: false as const, error: "Platoon name is required." };
+    const list = readPlatoons();
+    if (list.some((p) => p.toLowerCase() === trimmed.toLowerCase() && p !== oldName)) {
+      return { ok: false as const, error: "A platoon with that name already exists." };
+    }
+    writePlatoons(list.map((p) => (p === oldName ? trimmed : p)));
+    // cascade rename to soldiers
+    const soldiers = readStorage();
+    writeStorage(soldiers.map((s) => (s.platoon === oldName ? { ...s, platoon: trimmed } : s)));
+    return { ok: true as const };
+  }, []);
+
+  const deletePlatoon = useCallback((name: string) => {
+    const soldiers = readStorage();
+    const inUse = soldiers.filter((s) => s.platoon === name).length;
+    if (inUse > 0) {
+      return { ok: false as const, error: `Cannot delete — ${inUse} soldier(s) are assigned to this platoon.` };
+    }
+    writePlatoons(readPlatoons().filter((p) => p !== name));
+    return { ok: true as const };
+  }, []);
+
+  return { platoons, ready, addPlatoon, renamePlatoon, deletePlatoon };
 }
