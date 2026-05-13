@@ -1,5 +1,6 @@
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
 import { AppShell } from "@/components/Layout";
 import { useSoldiers, usePlatoons, isAdminLoggedIn } from "@/lib/soldiers";
 
@@ -34,8 +35,8 @@ function PlatoonsAdmin() {
     return <AppShell><div className="p-10 text-slate-500">Loading…</div></AppShell>;
   }
 
-  const flash = (msg: string) => { setInfo(msg); setError(null); setTimeout(() => setInfo(null), 2500); };
-  const fail = (msg: string) => { setError(msg); setInfo(null); };
+  const flash = (msg: string) => { setInfo(msg); setError(null); setTimeout(() => setInfo(null), 2500); toast.success(msg); };
+  const fail = (msg: string) => { setError(msg); setInfo(null); toast.error(msg); };
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
