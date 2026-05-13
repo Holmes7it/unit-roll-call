@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as AddRouteImport } from './routes/add'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
+import { Route as AdminPlatoonsRouteImport } from './routes/admin/platoons'
 import { Route as AdminLoginRouteImport } from './routes/admin/login'
 import { Route as AdminSoldiersIdRouteImport } from './routes/admin/soldiers/$id'
 
@@ -30,6 +31,11 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
   path: '/admin/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminPlatoonsRoute = AdminPlatoonsRouteImport.update({
+  id: '/admin/platoons',
+  path: '/admin/platoons',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminLoginRoute = AdminLoginRouteImport.update({
   id: '/admin/login',
   path: '/admin/login',
@@ -45,6 +51,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/add': typeof AddRoute
   '/admin/login': typeof AdminLoginRoute
+  '/admin/platoons': typeof AdminPlatoonsRoute
   '/admin/': typeof AdminIndexRoute
   '/admin/soldiers/$id': typeof AdminSoldiersIdRoute
 }
@@ -52,6 +59,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/add': typeof AddRoute
   '/admin/login': typeof AdminLoginRoute
+  '/admin/platoons': typeof AdminPlatoonsRoute
   '/admin': typeof AdminIndexRoute
   '/admin/soldiers/$id': typeof AdminSoldiersIdRoute
 }
@@ -60,19 +68,33 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/add': typeof AddRoute
   '/admin/login': typeof AdminLoginRoute
+  '/admin/platoons': typeof AdminPlatoonsRoute
   '/admin/': typeof AdminIndexRoute
   '/admin/soldiers/$id': typeof AdminSoldiersIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/add' | '/admin/login' | '/admin/' | '/admin/soldiers/$id'
+  fullPaths:
+    | '/'
+    | '/add'
+    | '/admin/login'
+    | '/admin/platoons'
+    | '/admin/'
+    | '/admin/soldiers/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/add' | '/admin/login' | '/admin' | '/admin/soldiers/$id'
+  to:
+    | '/'
+    | '/add'
+    | '/admin/login'
+    | '/admin/platoons'
+    | '/admin'
+    | '/admin/soldiers/$id'
   id:
     | '__root__'
     | '/'
     | '/add'
     | '/admin/login'
+    | '/admin/platoons'
     | '/admin/'
     | '/admin/soldiers/$id'
   fileRoutesById: FileRoutesById
@@ -81,6 +103,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AddRoute: typeof AddRoute
   AdminLoginRoute: typeof AdminLoginRoute
+  AdminPlatoonsRoute: typeof AdminPlatoonsRoute
   AdminIndexRoute: typeof AdminIndexRoute
   AdminSoldiersIdRoute: typeof AdminSoldiersIdRoute
 }
@@ -108,6 +131,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/platoons': {
+      id: '/admin/platoons'
+      path: '/admin/platoons'
+      fullPath: '/admin/platoons'
+      preLoaderRoute: typeof AdminPlatoonsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/login': {
       id: '/admin/login'
       path: '/admin/login'
@@ -129,9 +159,20 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AddRoute: AddRoute,
   AdminLoginRoute: AdminLoginRoute,
+  AdminPlatoonsRoute: AdminPlatoonsRoute,
   AdminIndexRoute: AdminIndexRoute,
   AdminSoldiersIdRoute: AdminSoldiersIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
