@@ -1,18 +1,18 @@
 import { useEffect, useState, useCallback } from "react";
 
-export type SoldierStatus = "Active" | "On Leave" | "Deployed" | "Discharged" | "Deceased";
+export type SoldierStatus = "Active" | "On Leave" | "Deployed" | "Discharged" | "Deceased" | "Sick";
 
 export interface Soldier {
   id: string;
   serviceNumber: string;
   rank: string;
-  firstName: string;
   lastName: string;
+  firstName: string;
   dateOfBirth: string;
   gender: string;
   nationality: string;
   unitName: string;
-  platoon: string;
+  unit: string;
   role: string;
   dateEnlisted: string;
   status: SoldierStatus;
@@ -33,7 +33,7 @@ export const RANKS = [
   "Warrant Officer", "Second Lieutenant", "Lieutenant", "Captain", "Major",
   "Lieutenant Colonel", "Colonel",
 ];
-export const STATUSES: SoldierStatus[] = ["Active", "On Leave", "Deployed", "Discharged", "Deceased"];
+export const STATUSES: SoldierStatus[] = ["Active", "On Leave", "Deployed", "Discharged", "Deceased", "Sick"];
 export const BLOOD_TYPES = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
 export const DEFAULT_PLATOONS = ["Alpha", "Bravo", "Charlie", "Delta"];
 /** @deprecated Use usePlatoons() for the live, admin-editable list. */
@@ -60,8 +60,8 @@ export function formatDate(iso: string): string {
 
 export function toCSV(soldiers: Soldier[]): string {
   const headers = [
-    "id", "serviceNumber", "rank", "firstName", "lastName", "dateOfBirth", "gender",
-    "nationality", "unitName", "platoon", "role", "dateEnlisted", "status",
+    "id", "serviceNumber", "rank", "lastName", "firstName", "dateOfBirth", "gender",
+    "nationality", "unitName", "unit", "role", "dateEnlisted", "status",
     "bloodType", "contactPhone", "nextOfKinName", "nextOfKinPhone", "notes", "createdAt",
   ];
   const escape = (v: unknown) => {
@@ -80,14 +80,14 @@ const SVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect
 export const PLACEHOLDER_PHOTO = "data:image/svg+xml;base64," + (typeof btoa !== "undefined" ? btoa(SVG) : "");
 
 const seedFactory = (): Soldier[] => [
-  { id: generateId(), serviceNumber: "GH-2018-001", rank: "Sergeant", firstName: "Kwame", lastName: "Mensah", dateOfBirth: "1990-04-12", gender: "Male", nationality: "Ghanaian", unitName: "3rd Infantry Battalion", platoon: "Alpha", role: "Squad Leader", dateEnlisted: "2010-06-01", status: "Active", bloodType: "O+", contactPhone: "+233 20 111 0001", nextOfKinName: "Abena Mensah", nextOfKinPhone: "+233 24 111 0001", notes: "Marksmanship instructor.", photo: PLACEHOLDER_PHOTO, createdAt: new Date().toISOString() },
-  { id: generateId(), serviceNumber: "GH-2019-014", rank: "Corporal", firstName: "Yaw", lastName: "Boateng", dateOfBirth: "1993-09-22", gender: "Male", nationality: "Ghanaian", unitName: "3rd Infantry Battalion", platoon: "Alpha", role: "Rifleman", dateEnlisted: "2015-03-15", status: "Deployed", bloodType: "A+", contactPhone: "+233 20 111 0002", nextOfKinName: "Akua Boateng", nextOfKinPhone: "+233 24 111 0002", notes: "", photo: PLACEHOLDER_PHOTO, createdAt: new Date().toISOString() },
-  { id: generateId(), serviceNumber: "GH-2021-077", rank: "Private", firstName: "Ama", lastName: "Asante", dateOfBirth: "1998-01-30", gender: "Female", nationality: "Ghanaian", unitName: "3rd Infantry Battalion", platoon: "Alpha", role: "Medic", dateEnlisted: "2021-07-10", status: "On Leave", bloodType: "B+", contactPhone: "+233 20 111 0003", nextOfKinName: "Kojo Asante", nextOfKinPhone: "+233 24 111 0003", notes: "Field medic certified.", photo: PLACEHOLDER_PHOTO, createdAt: new Date().toISOString() },
-  { id: generateId(), serviceNumber: "GH-2017-045", rank: "Lieutenant", firstName: "Kofi", lastName: "Owusu", dateOfBirth: "1988-11-05", gender: "Male", nationality: "Ghanaian", unitName: "3rd Infantry Battalion", platoon: "Bravo", role: "Platoon Commander", dateEnlisted: "2009-01-20", status: "Active", bloodType: "AB+", contactPhone: "+233 20 111 0004", nextOfKinName: "Esi Owusu", nextOfKinPhone: "+233 24 111 0004", notes: "", photo: PLACEHOLDER_PHOTO, createdAt: new Date().toISOString() },
-  { id: generateId(), serviceNumber: "GH-2020-032", rank: "Lance Corporal", firstName: "Akosua", lastName: "Darko", dateOfBirth: "1996-06-18", gender: "Female", nationality: "Ghanaian", unitName: "3rd Infantry Battalion", platoon: "Bravo", role: "Signaller", dateEnlisted: "2018-09-12", status: "Deployed", bloodType: "O-", contactPhone: "+233 20 111 0005", nextOfKinName: "Yaa Darko", nextOfKinPhone: "+233 24 111 0005", notes: "", photo: PLACEHOLDER_PHOTO, createdAt: new Date().toISOString() },
-  { id: generateId(), serviceNumber: "GH-2015-009", rank: "Staff Sergeant", firstName: "Kwesi", lastName: "Adjei", dateOfBirth: "1985-02-14", gender: "Male", nationality: "Ghanaian", unitName: "3rd Infantry Battalion", platoon: "Bravo", role: "Quartermaster", dateEnlisted: "2005-08-01", status: "Discharged", bloodType: "A-", contactPhone: "+233 20 111 0006", nextOfKinName: "Adwoa Adjei", nextOfKinPhone: "+233 24 111 0006", notes: "Honorably discharged 2023.", photo: PLACEHOLDER_PHOTO, createdAt: new Date().toISOString() },
-  { id: generateId(), serviceNumber: "GH-2016-022", rank: "Corporal", firstName: "Nana", lastName: "Acheampong", dateOfBirth: "1991-12-03", gender: "Male", nationality: "Ghanaian", unitName: "3rd Infantry Battalion", platoon: "Charlie", role: "Machine Gunner", dateEnlisted: "2012-05-22", status: "Active", bloodType: "B-", contactPhone: "+233 20 111 0007", nextOfKinName: "Efua Acheampong", nextOfKinPhone: "+233 24 111 0007", notes: "", photo: PLACEHOLDER_PHOTO, createdAt: new Date().toISOString() },
-  { id: generateId(), serviceNumber: "GH-2014-003", rank: "Sergeant", firstName: "Kwabena", lastName: "Osei", dateOfBirth: "1983-07-19", gender: "Male", nationality: "Ghanaian", unitName: "3rd Infantry Battalion", platoon: "Charlie", role: "Sniper", dateEnlisted: "2004-04-10", status: "Deceased", bloodType: "O+", contactPhone: "+233 20 111 0008", nextOfKinName: "Afia Osei", nextOfKinPhone: "+233 24 111 0008", notes: "KIA — honored in memoriam.", photo: PLACEHOLDER_PHOTO, createdAt: new Date().toISOString() },
+  { id: generateId(), serviceNumber: "GH-2018-001", rank: "Sergeant", lastName: "Mensah", firstName: "Kwame", dateOfBirth: "1990-04-12", gender: "Male", nationality: "Ghanaian", unitName: "3rd Infantry Battalion", unit: "Alpha", role: "Squad Leader", dateEnlisted: "2010-06-01", status: "Active", bloodType: "O+", contactPhone: "+233 20 111 0001", nextOfKinName: "Abena Mensah", nextOfKinPhone: "+233 24 111 0001", notes: "Marksmanship instructor.", photo: PLACEHOLDER_PHOTO, createdAt: new Date().toISOString() },
+  { id: generateId(), serviceNumber: "GH-2019-014", rank: "Corporal", lastName: "Boateng", firstName: "Yaw", dateOfBirth: "1993-09-22", gender: "Male", nationality: "Ghanaian", unitName: "3rd Infantry Battalion", unit: "Alpha", role: "Rifleman", dateEnlisted: "2015-03-15", status: "Deployed", bloodType: "A+", contactPhone: "+233 20 111 0002", nextOfKinName: "Akua Boateng", nextOfKinPhone: "+233 24 111 0002", notes: "", photo: PLACEHOLDER_PHOTO, createdAt: new Date().toISOString() },
+  { id: generateId(), serviceNumber: "GH-2021-077", rank: "Private", lastName: "Asante", firstName: "Ama", dateOfBirth: "1998-01-30", gender: "Female", nationality: "Ghanaian", unitName: "3rd Infantry Battalion", unit: "Alpha", role: "Medic", dateEnlisted: "2021-07-10", status: "On Leave", bloodType: "B+", contactPhone: "+233 20 111 0003", nextOfKinName: "Kojo Asante", nextOfKinPhone: "+233 24 111 0003", notes: "Field medic certified.", photo: PLACEHOLDER_PHOTO, createdAt: new Date().toISOString() },
+  { id: generateId(), serviceNumber: "GH-2017-045", rank: "Lieutenant", lastName: "Owusu", firstName: "Kofi", dateOfBirth: "1988-11-05", gender: "Male", nationality: "Ghanaian", unitName: "3rd Infantry Battalion", unit: "Bravo", role: "Platoon Commander", dateEnlisted: "2009-01-20", status: "Active", bloodType: "AB+", contactPhone: "+233 20 111 0004", nextOfKinName: "Esi Owusu", nextOfKinPhone: "+233 24 111 0004", notes: "", photo: PLACEHOLDER_PHOTO, createdAt: new Date().toISOString() },
+  { id: generateId(), serviceNumber: "GH-2020-032", rank: "Lance Corporal", lastName: "Darko", firstName: "Akosua", dateOfBirth: "1996-06-18", gender: "Female", nationality: "Ghanaian", unitName: "3rd Infantry Battalion", unit: "Bravo", role: "Signaller", dateEnlisted: "2018-09-12", status: "Deployed", bloodType: "O-", contactPhone: "+233 20 111 0005", nextOfKinName: "Yaa Darko", nextOfKinPhone: "+233 24 111 0005", notes: "", photo: PLACEHOLDER_PHOTO, createdAt: new Date().toISOString() },
+  { id: generateId(), serviceNumber: "GH-2015-009", rank: "Staff Sergeant", lastName: "Adjei", firstName: "Kwesi", dateOfBirth: "1985-02-14", gender: "Male", nationality: "Ghanaian", unitName: "3rd Infantry Battalion", unit: "Bravo", role: "Quartermaster", dateEnlisted: "2005-08-01", status: "Discharged", bloodType: "A-", contactPhone: "+233 20 111 0006", nextOfKinName: "Adwoa Adjei", nextOfKinPhone: "+233 24 111 0006", notes: "Honorably discharged 2023.", photo: PLACEHOLDER_PHOTO, createdAt: new Date().toISOString() },
+  { id: generateId(), serviceNumber: "GH-2016-022", rank: "Corporal", lastName: "Acheampong", firstName: "Nana", dateOfBirth: "1991-12-03", gender: "Male", nationality: "Ghanaian", unitName: "3rd Infantry Battalion", unit: "Charlie", role: "Machine Gunner", dateEnlisted: "2012-05-22", status: "Active", bloodType: "B-", contactPhone: "+233 20 111 0007", nextOfKinName: "Efua Acheampong", nextOfKinPhone: "+233 24 111 0007", notes: "", photo: PLACEHOLDER_PHOTO, createdAt: new Date().toISOString() },
+  { id: generateId(), serviceNumber: "GH-2014-003", rank: "Sergeant", lastName: "Osei", firstName: "Kwabena", dateOfBirth: "1983-07-19", gender: "Male", nationality: "Ghanaian", unitName: "3rd Infantry Battalion", unit: "Charlie", role: "Sniper", dateEnlisted: "2004-04-10", status: "Deceased", bloodType: "O+", contactPhone: "+233 20 111 0008", nextOfKinName: "Afia Osei", nextOfKinPhone: "+233 24 111 0008", notes: "KIA — honored in memoriam.", photo: PLACEHOLDER_PHOTO, createdAt: new Date().toISOString() },
 ];
 
 function readStorage(): Soldier[] {
@@ -151,6 +151,7 @@ export const STATUS_BADGE: Record<SoldierStatus, string> = {
   "On Leave": "bg-yellow-100 text-yellow-800 border-yellow-300",
   Discharged: "bg-gray-200 text-gray-800 border-gray-300",
   Deceased: "bg-red-100 text-red-800 border-red-300",
+  Sick: "bg-orange-100 text-orange-800 border-orange-300",
 };
 
 export const ADMIN_PASSWORD = "unit2024";
@@ -200,10 +201,10 @@ export function usePlatoons() {
 
   const addPlatoon = useCallback((name: string) => {
     const trimmed = name.trim();
-    if (!trimmed) return { ok: false as const, error: "Platoon name is required." };
+    if (!trimmed) return { ok: false as const, error: "Unit name is required." };
     const list = readPlatoons();
     if (list.some((p) => p.toLowerCase() === trimmed.toLowerCase())) {
-      return { ok: false as const, error: "A platoon with that name already exists." };
+      return { ok: false as const, error: "A unit with that name already exists." };
     }
     writePlatoons([...list, trimmed]);
     return { ok: true as const };
@@ -211,23 +212,23 @@ export function usePlatoons() {
 
   const renamePlatoon = useCallback((oldName: string, newName: string) => {
     const trimmed = newName.trim();
-    if (!trimmed) return { ok: false as const, error: "Platoon name is required." };
+    if (!trimmed) return { ok: false as const, error: "Unit name is required." };
     const list = readPlatoons();
     if (list.some((p) => p.toLowerCase() === trimmed.toLowerCase() && p !== oldName)) {
-      return { ok: false as const, error: "A platoon with that name already exists." };
+      return { ok: false as const, error: "A unit with that name already exists." };
     }
     writePlatoons(list.map((p) => (p === oldName ? trimmed : p)));
     // cascade rename to soldiers
     const soldiers = readStorage();
-    writeStorage(soldiers.map((s) => (s.platoon === oldName ? { ...s, platoon: trimmed } : s)));
+    writeStorage(soldiers.map((s) => (s.unit === oldName ? { ...s, unit: trimmed } : s)));
     return { ok: true as const };
   }, []);
 
   const deletePlatoon = useCallback((name: string) => {
     const soldiers = readStorage();
-    const inUse = soldiers.filter((s) => s.platoon === name).length;
+    const inUse = soldiers.filter((s) => s.unit === name).length;
     if (inUse > 0) {
-      return { ok: false as const, error: `Cannot delete — ${inUse} soldier(s) are assigned to this platoon.` };
+      return { ok: false as const, error: `Cannot delete — ${inUse} soldier(s) are assigned to this unit.` };
     }
     writePlatoons(readPlatoons().filter((p) => p !== name));
     return { ok: true as const };

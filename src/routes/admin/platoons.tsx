@@ -3,9 +3,31 @@ import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/Layout";
 import { useSoldiers, usePlatoons, isAdminLoggedIn } from "@/lib/soldiers";
+import {
+  Users,
+  Plus,
+  Pencil,
+  Trash2,
+  Check,
+  X,
+  ArrowLeft,
+  Users2,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 
 export const Route = createFileRoute("/admin/platoons")({
-  head: () => ({ meta: [{ title: "Manage Platoons — Unit Registry" }] }),
+  head: () => ({ meta: [{ title: "Manage Units — Unit Registry" }] }),
   component: PlatoonsAdmin,
 });
 
@@ -15,8 +37,6 @@ function PlatoonsAdmin() {
   const { soldiers } = useSoldiers();
   const [authChecked, setAuthChecked] = useState(false);
   const [name, setName] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const [info, setInfo] = useState<string | null>(null);
   const [editing, setEditing] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
 
@@ -27,119 +47,188 @@ function PlatoonsAdmin() {
 
   const counts = useMemo(() => {
     const m = new Map<string, number>();
-    for (const s of soldiers) m.set(s.platoon, (m.get(s.platoon) ?? 0) + 1);
+    for (const s of soldiers) m.set(s.unit, (m.get(s.unit) ?? 0) + 1);
     return m;
   }, [soldiers]);
 
   if (!authChecked || !ready) {
-    return <AppShell><div className="p-10 text-slate-500">Loading…</div></AppShell>;
+    return (
+      <AppShell>
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        </div>
+      </AppShell>
+    );
   }
-
-  const flash = (msg: string) => { setInfo(msg); setError(null); setTimeout(() => setInfo(null), 2500); toast.success(msg); };
-  const fail = (msg: string) => { setError(msg); setInfo(null); toast.error(msg); };
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
     const r = addPlatoon(name);
-    if (!r.ok) return fail(r.error);
-    flash(`Platoon "${name.trim()}" created.`);
+    if (!r.ok) return toast.error(r.error);
+    toast.success(`Unit "${name.trim()}" established.`);
     setName("");
   };
 
   const saveRename = (oldName: string) => {
     const r = renamePlatoon(oldName, draft);
-    if (!r.ok) return fail(r.error);
-    flash(`Renamed to "${draft.trim()}".`);
+    if (!r.ok) return toast.error(r.error);
+    toast.success(`Unit designation updated to "${draft.trim()}".`);
     setEditing(null);
     setDraft("");
   };
 
   const remove = (n: string) => {
     const r = deletePlatoon(n);
-    if (!r.ok) return fail(r.error);
-    flash(`Platoon "${n}" deleted.`);
+    if (!r.ok) return toast.error(r.error);
+    toast.success(`Unit "${n}" decommissioned.`);
   };
 
   return (
     <AppShell>
-      <div className="px-6 md:px-10 py-8 max-w-3xl mx-auto">
-        <Link to="/admin" className="text-sm text-[#4d7c0f] hover:underline">← Back to dashboard</Link>
-        <h1 className="mt-3 text-2xl font-bold text-slate-900">Manage Platoons</h1>
-        <p className="mt-1 text-sm text-slate-600">Create, rename, or remove platoons in the unit.</p>
-
-        {error && <div className="mt-4 rounded-md border border-red-300 bg-red-50 text-red-800 px-4 py-2 text-sm">{error}</div>}
-        {info && <div className="mt-4 rounded-md border border-green-300 bg-green-50 text-green-800 px-4 py-2 text-sm">{info}</div>}
-
-        <form onSubmit={submit} className="mt-6 bg-white border border-slate-200 rounded-xl p-5 shadow-sm flex flex-wrap gap-3 items-end">
-          <div className="flex-1 min-w-[200px]">
-            <label className="text-xs font-medium text-slate-700">New platoon name</label>
-            <input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="e.g. Echo"
-              className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
-            />
+      <div className="px-6 md:px-10 py-10 max-w-4xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+        <div>
+          <Button asChild variant="ghost" size="sm" className="mb-4 text-accent hover:text-accent font-bold gap-2 -ml-2">
+            <Link to="/admin">
+              <ArrowLeft size={16} />
+              Dashboard
+            </Link>
+          </Button>
+          <div className="flex items-center gap-2 text-accent font-bold text-xs uppercase tracking-widest mb-2">
+            <Users2 size={14} />
+            Unit Structure
           </div>
-          <button type="submit" className="rounded-md bg-[#4d7c0f] hover:bg-[#3f6b0a] text-white px-4 py-2 text-sm font-medium">
-            Add Platoon
-          </button>
-        </form>
-
-        <div className="mt-6 bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
-          <table className="w-full text-sm">
-            <thead className="bg-slate-50 text-slate-600 text-xs uppercase">
-              <tr>
-                <th className="px-4 py-2 text-left">Platoon</th>
-                <th className="px-4 py-2 text-left">Soldiers</th>
-                <th className="px-4 py-2 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {platoons.length === 0 && (
-                <tr><td colSpan={3} className="px-4 py-6 text-center text-slate-500">No platoons yet.</td></tr>
-              )}
-              {platoons.map((p) => {
-                const isEditing = editing === p;
-                const count = counts.get(p) ?? 0;
-                return (
-                  <tr key={p} className="border-t border-slate-100">
-                    <td className="px-4 py-2 font-medium">
-                      {isEditing ? (
-                        <input
-                          value={draft}
-                          onChange={(e) => setDraft(e.target.value)}
-                          className="w-full rounded-md border border-slate-300 px-2 py-1 text-sm"
-                          autoFocus
-                        />
-                      ) : p}
-                    </td>
-                    <td className="px-4 py-2 text-slate-600">{count}</td>
-                    <td className="px-4 py-2 text-right space-x-2">
-                      {isEditing ? (
-                        <>
-                          <button onClick={() => saveRename(p)} className="text-xs font-medium text-[#4d7c0f] hover:underline">Save</button>
-                          <button onClick={() => { setEditing(null); setDraft(""); }} className="text-xs font-medium text-slate-500 hover:underline">Cancel</button>
-                        </>
-                      ) : (
-                        <>
-                          <button onClick={() => { setEditing(p); setDraft(p); setError(null); }} className="text-xs font-medium text-[#4d7c0f] hover:underline">Rename</button>
-                          <button
-                            onClick={() => remove(p)}
-                            disabled={count > 0}
-                            title={count > 0 ? "Reassign soldiers first" : "Delete platoon"}
-                            className="text-xs font-medium text-red-700 hover:underline disabled:text-slate-300 disabled:no-underline disabled:cursor-not-allowed"
-                          >
-                            Delete
-                          </button>
-                        </>
-                      )}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+          <h1 className="text-3xl font-black text-foreground tracking-tight">Unit Management</h1>
+          <p className="text-muted-foreground mt-1">Configure and organize unit subdivisions.</p>
         </div>
+
+        <Card className="border-border/50 bg-card/50 backdrop-blur-sm shadow-xl">
+          <CardHeader>
+            <CardTitle className="text-lg font-bold">New Designation</CardTitle>
+            <CardDescription>Assign a new unit identifier to the unit registry.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={submit} className="flex flex-wrap gap-3 items-end">
+              <div className="flex-1 min-w-[240px] space-y-2">
+                <Input
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="e.g. Echo, Foxtrot..."
+                  className="bg-background/50 border-border/50"
+                />
+              </div>
+              <Button type="submit" className="bg-primary hover:opacity-90 font-bold gap-2 px-6">
+                <Plus size={18} />
+                Add Unit
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+
+        <Card className="border-border/50 bg-card/50 backdrop-blur-sm shadow-xl overflow-hidden">
+          <Table>
+            <TableHeader className="bg-muted/30">
+              <TableRow className="hover:bg-transparent border-border/50">
+                <TableHead className="font-bold text-foreground/70 uppercase text-[10px] tracking-widest px-6">Unit Identifier</TableHead>
+                <TableHead className="font-bold text-foreground/70 uppercase text-[10px] tracking-widest px-6">Current Strength</TableHead>
+                <TableHead className="text-right font-bold text-foreground/70 uppercase text-[10px] tracking-widest px-6">Operations</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {platoons.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={3} className="h-32 text-center text-muted-foreground">
+                    No units established.
+                  </TableCell>
+                </TableRow>
+              ) : (
+                platoons.map((p) => {
+                  const isEditing = editing === p;
+                  const count = counts.get(p) ?? 0;
+                  return (
+                    <TableRow key={p} className="group border-border/30 hover:bg-muted/20">
+                      <TableCell className="font-black tracking-tight px-6 text-lg">
+                        {isEditing ? (
+                          <div className="flex items-center gap-2 max-w-[200px]">
+                            <Input
+                              value={draft}
+                              onChange={(e) => setDraft(e.target.value)}
+                              className="h-8 py-0 bg-background/50 border-accent/50 focus-visible:ring-accent"
+                              autoFocus
+                            />
+                          </div>
+                        ) : (
+                          p
+                        )}
+                      </TableCell>
+                      <TableCell className="px-6">
+                        <div className="flex items-center gap-2">
+                          <Users size={14} className="text-muted-foreground" />
+                          <span className="font-bold text-muted-foreground">{count} Personnel</span>
+                          {count > 0 && (
+                            <Badge variant="outline" className="text-[10px] font-bold uppercase tracking-tighter bg-green-500/10 text-green-500 border-green-500/20">
+                              Active
+                            </Badge>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-right px-6">
+                        <div className="flex items-center justify-end gap-2">
+                          {isEditing ? (
+                            <>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="h-8 w-8 p-0 border-green-500/50 text-green-500 hover:bg-green-500/10"
+                                onClick={() => saveRename(p)}
+                              >
+                                <Check size={14} />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="h-8 w-8 p-0 border-border/50 text-muted-foreground hover:bg-muted"
+                                onClick={() => {
+                                  setEditing(null);
+                                  setDraft("");
+                                }}
+                              >
+                                <X size={14} />
+                              </Button>
+                            </>
+                          ) : (
+                            <>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-8 w-8 p-0 text-muted-foreground hover:text-accent"
+                                onClick={() => {
+                                  setEditing(p);
+                                  setDraft(p);
+                                }}
+                              >
+                                <Pencil size={14} />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive"
+                                disabled={count > 0}
+                                title={count > 0 ? "Reassign personnel first" : "Decommission unit"}
+                                onClick={() => remove(p)}
+                              >
+                                <Trash2 size={14} />
+                              </Button>
+                            </>
+                          )}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
+              )}
+            </TableBody>
+          </Table>
+        </Card>
       </div>
     </AppShell>
   );

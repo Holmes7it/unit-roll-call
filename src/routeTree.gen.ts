@@ -13,6 +13,7 @@ import { Route as AddRouteImport } from './routes/add'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as AdminPlatoonsRouteImport } from './routes/admin/platoons'
+import { Route as AdminOverviewRouteImport } from './routes/admin/overview'
 import { Route as AdminLoginRouteImport } from './routes/admin/login'
 import { Route as AdminSoldiersIdRouteImport } from './routes/admin/soldiers/$id'
 
@@ -36,6 +37,11 @@ const AdminPlatoonsRoute = AdminPlatoonsRouteImport.update({
   path: '/admin/platoons',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminOverviewRoute = AdminOverviewRouteImport.update({
+  id: '/admin/overview',
+  path: '/admin/overview',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminLoginRoute = AdminLoginRouteImport.update({
   id: '/admin/login',
   path: '/admin/login',
@@ -51,6 +57,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/add': typeof AddRoute
   '/admin/login': typeof AdminLoginRoute
+  '/admin/overview': typeof AdminOverviewRoute
   '/admin/platoons': typeof AdminPlatoonsRoute
   '/admin/': typeof AdminIndexRoute
   '/admin/soldiers/$id': typeof AdminSoldiersIdRoute
@@ -59,6 +66,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/add': typeof AddRoute
   '/admin/login': typeof AdminLoginRoute
+  '/admin/overview': typeof AdminOverviewRoute
   '/admin/platoons': typeof AdminPlatoonsRoute
   '/admin': typeof AdminIndexRoute
   '/admin/soldiers/$id': typeof AdminSoldiersIdRoute
@@ -68,6 +76,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/add': typeof AddRoute
   '/admin/login': typeof AdminLoginRoute
+  '/admin/overview': typeof AdminOverviewRoute
   '/admin/platoons': typeof AdminPlatoonsRoute
   '/admin/': typeof AdminIndexRoute
   '/admin/soldiers/$id': typeof AdminSoldiersIdRoute
@@ -78,6 +87,7 @@ export interface FileRouteTypes {
     | '/'
     | '/add'
     | '/admin/login'
+    | '/admin/overview'
     | '/admin/platoons'
     | '/admin/'
     | '/admin/soldiers/$id'
@@ -86,6 +96,7 @@ export interface FileRouteTypes {
     | '/'
     | '/add'
     | '/admin/login'
+    | '/admin/overview'
     | '/admin/platoons'
     | '/admin'
     | '/admin/soldiers/$id'
@@ -94,6 +105,7 @@ export interface FileRouteTypes {
     | '/'
     | '/add'
     | '/admin/login'
+    | '/admin/overview'
     | '/admin/platoons'
     | '/admin/'
     | '/admin/soldiers/$id'
@@ -103,6 +115,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AddRoute: typeof AddRoute
   AdminLoginRoute: typeof AdminLoginRoute
+  AdminOverviewRoute: typeof AdminOverviewRoute
   AdminPlatoonsRoute: typeof AdminPlatoonsRoute
   AdminIndexRoute: typeof AdminIndexRoute
   AdminSoldiersIdRoute: typeof AdminSoldiersIdRoute
@@ -138,6 +151,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminPlatoonsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/overview': {
+      id: '/admin/overview'
+      path: '/admin/overview'
+      fullPath: '/admin/overview'
+      preLoaderRoute: typeof AdminOverviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/login': {
       id: '/admin/login'
       path: '/admin/login'
@@ -159,6 +179,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AddRoute: AddRoute,
   AdminLoginRoute: AdminLoginRoute,
+  AdminOverviewRoute: AdminOverviewRoute,
   AdminPlatoonsRoute: AdminPlatoonsRoute,
   AdminIndexRoute: AdminIndexRoute,
   AdminSoldiersIdRoute: AdminSoldiersIdRoute,
@@ -166,3 +187,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
