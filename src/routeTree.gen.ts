@@ -9,14 +9,21 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as EnrollRouteImport } from './routes/enroll'
 import { Route as AddRouteImport } from './routes/add'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as AdminPlatoonsRouteImport } from './routes/admin/platoons'
 import { Route as AdminOverviewRouteImport } from './routes/admin/overview'
 import { Route as AdminLoginRouteImport } from './routes/admin/login'
+import { Route as AdminBatchesRouteImport } from './routes/admin/batches'
 import { Route as AdminSoldiersIdRouteImport } from './routes/admin/soldiers/$id'
 
+const EnrollRoute = EnrollRouteImport.update({
+  id: '/enroll',
+  path: '/enroll',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AddRoute = AddRouteImport.update({
   id: '/add',
   path: '/add',
@@ -47,6 +54,11 @@ const AdminLoginRoute = AdminLoginRouteImport.update({
   path: '/admin/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminBatchesRoute = AdminBatchesRouteImport.update({
+  id: '/admin/batches',
+  path: '/admin/batches',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminSoldiersIdRoute = AdminSoldiersIdRouteImport.update({
   id: '/admin/soldiers/$id',
   path: '/admin/soldiers/$id',
@@ -56,6 +68,8 @@ const AdminSoldiersIdRoute = AdminSoldiersIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/add': typeof AddRoute
+  '/enroll': typeof EnrollRoute
+  '/admin/batches': typeof AdminBatchesRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin/overview': typeof AdminOverviewRoute
   '/admin/platoons': typeof AdminPlatoonsRoute
@@ -65,6 +79,8 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/add': typeof AddRoute
+  '/enroll': typeof EnrollRoute
+  '/admin/batches': typeof AdminBatchesRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin/overview': typeof AdminOverviewRoute
   '/admin/platoons': typeof AdminPlatoonsRoute
@@ -75,6 +91,8 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/add': typeof AddRoute
+  '/enroll': typeof EnrollRoute
+  '/admin/batches': typeof AdminBatchesRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin/overview': typeof AdminOverviewRoute
   '/admin/platoons': typeof AdminPlatoonsRoute
@@ -86,6 +104,8 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/add'
+    | '/enroll'
+    | '/admin/batches'
     | '/admin/login'
     | '/admin/overview'
     | '/admin/platoons'
@@ -95,6 +115,8 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/add'
+    | '/enroll'
+    | '/admin/batches'
     | '/admin/login'
     | '/admin/overview'
     | '/admin/platoons'
@@ -104,6 +126,8 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/add'
+    | '/enroll'
+    | '/admin/batches'
     | '/admin/login'
     | '/admin/overview'
     | '/admin/platoons'
@@ -114,6 +138,8 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AddRoute: typeof AddRoute
+  EnrollRoute: typeof EnrollRoute
+  AdminBatchesRoute: typeof AdminBatchesRoute
   AdminLoginRoute: typeof AdminLoginRoute
   AdminOverviewRoute: typeof AdminOverviewRoute
   AdminPlatoonsRoute: typeof AdminPlatoonsRoute
@@ -123,6 +149,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/enroll': {
+      id: '/enroll'
+      path: '/enroll'
+      fullPath: '/enroll'
+      preLoaderRoute: typeof EnrollRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/add': {
       id: '/add'
       path: '/add'
@@ -165,6 +198,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminLoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/batches': {
+      id: '/admin/batches'
+      path: '/admin/batches'
+      fullPath: '/admin/batches'
+      preLoaderRoute: typeof AdminBatchesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/soldiers/$id': {
       id: '/admin/soldiers/$id'
       path: '/admin/soldiers/$id'
@@ -178,6 +218,8 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AddRoute: AddRoute,
+  EnrollRoute: EnrollRoute,
+  AdminBatchesRoute: AdminBatchesRoute,
   AdminLoginRoute: AdminLoginRoute,
   AdminOverviewRoute: AdminOverviewRoute,
   AdminPlatoonsRoute: AdminPlatoonsRoute,

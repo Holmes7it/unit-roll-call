@@ -11,6 +11,7 @@ import {
   Menu,
   X,
   Shield,
+  Layers,
 } from "lucide-react";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
@@ -48,7 +49,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         } md:static md:translate-x-0 border-r border-sidebar-border`}
       >
         <div className="px-6 py-8 border-b border-sidebar-border/50">
-          <div className="flex items-center gap-3">
+          <Link to="/" className="flex items-center gap-3 hover:opacity-90 transition-opacity">
             <div className="bg-sidebar-primary rounded-lg p-2 shadow-inner">
               <Shield size={24} className="text-sidebar-primary-foreground" />
             </div>
@@ -58,13 +59,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               </div>
               <div className="text-lg font-bold tracking-tight">3rd Infantry Bn</div>
             </div>
-          </div>
+          </Link>
         </div>
 
         <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
           {!loggedIn ? (
             <>
-              <NavLink to="/" label="Personnel Enrollment" icon={<UserPlus size={18} />} onClick={() => setOpen(false)} />
+              <NavLink to="/enroll" label="Personnel Enrollment" icon={<UserPlus size={18} />} onClick={() => setOpen(false)} />
               <div className="pt-4 pb-2">
                 <div className="px-3 text-[10px] uppercase tracking-widest text-sidebar-foreground/40 font-semibold">
                   Administration
@@ -82,13 +83,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <NavLink to="/admin/overview" label="Unit Overview" icon={<Home size={18} />} onClick={() => setOpen(false)} />
               <NavLink to="/admin" label="Command Dashboard" icon={<LayoutDashboard size={18} />} onClick={() => setOpen(false)} />
               <NavLink to="/admin/platoons" label="Unit Structure" icon={<Users size={18} />} onClick={() => setOpen(false)} />
+              <NavLink to="/admin/batches" label="Deployment Batches" icon={<Layers size={18} />} onClick={() => setOpen(false)} />
               <div className="pt-4 pb-2">
                 <div className="px-3 text-[10px] uppercase tracking-widest text-sidebar-foreground/40 font-semibold">
                   Public Facing
                 </div>
               </div>
               <NavLink
-                to="/"
+                to="/enroll"
                 label="Enroll Personnel"
                 icon={<UserPlus size={18} />}
                 onClick={() => setOpen(false)}
@@ -132,7 +134,7 @@ function NavLink({
   return (
     <Link
       to={to}
-      activeOptions={{ exact: to === "/" }}
+      activeOptions={{ exact: to === "/" || to === "/enroll" }}
       onClick={onClick}
       className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground transition-all duration-200 group"
       activeProps={{

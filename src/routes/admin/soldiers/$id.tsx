@@ -5,6 +5,7 @@ import { AppShell } from "@/components/Layout";
 import {
   useSoldiers,
   usePlatoons,
+  useBatches,
   isAdminLoggedIn,
   STATUSES,
   RANKS,
@@ -63,6 +64,7 @@ function SoldierProfile() {
   const router = useRouter();
   const { soldiers, ready, updateSoldier, deleteSoldier } = useSoldiers();
   const { platoons } = usePlatoons();
+  const { batches } = useBatches();
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState<Soldier | null>(null);
   const [confirmDel, setConfirmDel] = useState(false);
@@ -253,6 +255,7 @@ function SoldierProfile() {
                   <InfoRow label="Current Rank" value={data.rank} edit={editing} options={RANKS} onChange={(v) => setForm({ ...form!, rank: v })} />
                   <InfoRow label="Assigned Unit" value={data.unit} edit={editing} options={platoons} onChange={(v) => setForm({ ...form!, unit: v })} />
                   <InfoRow label="Operational Role" value={data.role} edit={editing} onChange={(v) => setForm({ ...form!, role: v })} />
+                  <InfoRow label="Deployment Batch" value={data.batch || "Unassigned"} edit={editing} options={["Unassigned", ...batches.map(b => b.code)]} onChange={(v) => setForm({ ...form!, batch: v })} />
                   <InfoRow label="Service Status" value={data.status} edit={editing} options={STATUSES as any} onChange={(v) => setForm({ ...form!, status: v as any })} />
                   <InfoRow label="Enlistment Date" value={editing ? data.dateEnlisted : formatDate(data.dateEnlisted)} edit={editing} type="date" raw={data.dateEnlisted} onChange={(v) => setForm({ ...form!, dateEnlisted: v })} />
                 </CardContent>

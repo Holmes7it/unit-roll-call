@@ -1,9 +1,22 @@
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { AppShell } from "@/components/Layout";
+import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import {
   useSoldiers,
   usePlatoons,
+  useBatches,
   isAdminLoggedIn,
   STATUSES,
   RANKS,
@@ -31,6 +44,8 @@ import {
   UserMinus,
   Shield,
   Users,
+  Trash2,
+  AlertTriangle,
 } from "lucide-react";
 import {
   Table,
@@ -64,11 +79,13 @@ function AdminDashboard() {
   const router = useRouter();
   const { soldiers, ready } = useSoldiers();
   const { platoons } = usePlatoons();
+  const { batches } = useBatches();
   const [authChecked, setAuthChecked] = useState(false);
 
   const [statusFilter, setStatusFilter] = useState("all");
   const [unitFilter, setUnitFilter] = useState("all");
   const [rankFilter, setRankFilter] = useState("all");
+  const [batchFilter, setBatchFilter] = useState("all");
   const [search, setSearch] = useState("");
   const [sortKey, setSortKey] = useState<SortKey>("serviceNumber");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
@@ -88,13 +105,14 @@ function AdminDashboard() {
       if (statusFilter !== "all" && s.status !== statusFilter) return false;
       if (unitFilter !== "all" && s.unit !== unitFilter) return false;
       if (rankFilter !== "all" && s.rank !== rankFilter) return false;
+      if (batchFilter !== "all" && s.batch !== batchFilter) return false;
       if (q) {
         const hay = `${s.lastName} ${s.firstName} ${s.serviceNumber}`.toLowerCase();
         if (!hay.includes(q)) return false;
       }
       return true;
     });
-  }, [soldiers, statusFilter, unitFilter, rankFilter, search]);
+  }, [soldiers, statusFilter, unitFilter, rankFilter, batchFilter, search]);
 
   const sorted = useMemo(() => {
     const arr = [...filtered];
@@ -136,6 +154,21 @@ function AdminDashboard() {
     URL.revokeObjectURL(url);
   };
 
+  const purgeAllData = () => {
+    localStorage.setItem("unit_registry_soldiers", JSON.stringify([]));
+    localStorage.setItem("unit_registry_platoons", JSON.stringify([]));
+    localStorage.setItem("unit_registry_batches", JSON.stringify([]));
+
+    // Trigger updates
+    window.dispatchEvent(new Event("unit_registry_change"));
+    window.dispatchEvent(new Event("unit_registry_platoons_change"));
+    window.dispatchEvent(new Event("unit_registry_batches_change"));
+
+    toast.success("System Data Purged", {
+      description: "All personnel records, platoons, and batches have been permanently deleted.",
+    });
+  };
+
   if (!authChecked || !ready) {
     return (
       <AppShell>
@@ -159,12 +192,38 @@ function AdminDashboard() {
             <p className="text-muted-foreground mt-1">Personnel management and unit logistics overview.</p>
           </div>
           <div className="flex items-center gap-3">
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="outline" className="gap-2 font-bold text-destructive hover:bg-destructive/10 hover:text-destructive border-destructive/30">
+                  <Trash2 size={16} />
+                  Purge Database
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent className="bg-card border-border/80 text-foreground font-mono">
+                <AlertDialogHeader>
+                  <AlertDialogTitle className="flex items-center gap-2 text-destructive font-black uppercase text-base">
+                    <AlertTriangle size={20} className="text-destructive animate-pulse" />
+                    SYSTEM PURGE AUTHORIZATION
+                  </AlertDialogTitle>
+                  <AlertDialogDescription className="text-muted-foreground text-xs leading-relaxed mt-2 uppercase tracking-wide">
+                    WARNING: You are about to permanently delete all soldiers data, platoons, and batches from the registry database. This operation is irreversible.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter className="mt-4">
+                  <AlertDialogCancel className="font-bold border-border text-xs uppercase tracking-wider">Abort</AlertDialogCancel>
+                  <AlertDialogAction onClick={purgeAllData} className="bg-destructive hover:bg-destructive/90 text-white font-bold text-xs uppercase tracking-wider">
+                    Authorize Purge
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+
             <Button onClick={exportCSV} variant="outline" className="gap-2 font-bold">
               <Download size={16} />
               Export Data
             </Button>
             <Button asChild className="gap-2 font-bold bg-primary hover:opacity-90">
-              <Link to="/">
+              <Link to="/enroll">
                 <Plus size={16} />
                 Enroll Personnel
               </Link>
@@ -181,7 +240,7 @@ function AdminDashboard() {
         {/* Search & Filters */}
         <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
           <CardContent className="pt-6">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={16} />
                 <Input
@@ -233,6 +292,21 @@ function AdminDashboard() {
                   ))}
                 </SelectContent>
               </Select>
+
+              <Select value={batchFilter} onValueChange={setBatchFilter}>
+                <SelectTrigger className="bg-background/50 border-border/50">
+                  <SelectValue placeholder="All Batches" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Batches</SelectItem>
+                  <SelectItem value="Unassigned">Unassigned</SelectItem>
+                  {batches.map((b) => (
+                    <SelectItem key={b.id} value={b.code}>
+                      {b.name} ({b.code})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </CardContent>
         </Card>
@@ -254,6 +328,7 @@ function AdminDashboard() {
                   setStatusFilter("all");
                   setUnitFilter("all");
                   setRankFilter("all");
+                  setBatchFilter("all");
                 }} className="mt-4 text-accent">
                   Clear all filters
                 </Button>
@@ -289,6 +364,7 @@ function AdminDashboard() {
                             <SortableHead label="Rank" k="rank" current={sortKey} dir={sortDir} onSort={toggleSort} />
                             <TableHead className="font-bold text-foreground/70 uppercase text-[10px] tracking-widest">Role</TableHead>
                             <SortableHead label="Status" k="status" current={sortKey} dir={sortDir} onSort={toggleSort} />
+                            <TableHead className="font-bold text-foreground/70 uppercase text-[10px] tracking-widest">Deployment</TableHead>
                             <SortableHead label="Enlisted" k="dateEnlisted" current={sortKey} dir={sortDir} onSort={toggleSort} />
                             <TableHead className="text-right font-bold text-foreground/70 uppercase text-[10px] tracking-widest">Actions</TableHead>
                           </TableRow>
@@ -320,6 +396,9 @@ function AdminDashboard() {
                                 <Badge variant="outline" className={`font-bold text-[10px] uppercase tracking-tighter ${STATUS_BADGE[s.status]}`}>
                                   {s.status}
                                 </Badge>
+                              </TableCell>
+                              <TableCell className="text-xs font-bold font-mono uppercase text-muted-foreground">
+                                {s.batch || "Unassigned"}
                               </TableCell>
                               <TableCell className="text-sm text-muted-foreground">
                                 {formatDate(s.dateEnlisted)}
