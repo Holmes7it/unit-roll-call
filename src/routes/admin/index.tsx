@@ -143,15 +143,24 @@ function AdminDashboard() {
     }
   };
 
-  const exportCSV = () => {
-    const csv = toCSV(soldiers);
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `unit_registry_${new Date().toISOString().slice(0, 10)}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
+  const exportExcel = async () => {
+    const toastId = toast.loading("Generating Excel spreadsheet...", {
+      description: "Loading export utilities and generating sheet with profile photos."
+    });
+    try {
+      const { exportSoldiersToExcel } = await import("../../lib/excelExport");
+      await exportSoldiersToExcel(soldiers);
+      toast.success("Export Complete", {
+        id: toastId,
+        description: "Excel file downloaded successfully."
+      });
+    } catch (error) {
+      console.error(error);
+      toast.error("Export Failed", {
+        id: toastId,
+        description: "An error occurred while generating the Excel file."
+      });
+    }
   };
 
   const purgeAllData = () => {
@@ -218,9 +227,9 @@ function AdminDashboard() {
               </AlertDialogContent>
             </AlertDialog>
 
-            <Button onClick={exportCSV} variant="outline" className="gap-2 font-bold">
+            <Button onClick={exportExcel} variant="outline" className="gap-2 font-bold">
               <Download size={16} />
-              Export Data
+              Export to Excel
             </Button>
             <Button asChild className="gap-2 font-bold bg-primary hover:opacity-90">
               <Link to="/enroll">

@@ -57,7 +57,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <div className="text-[10px] uppercase tracking-[0.2em] text-sidebar-primary font-bold">
                 Unit Registry
               </div>
-              <div className="text-lg font-bold tracking-tight">3rd Infantry Bn</div>
+              <div className="text-lg font-bold tracking-tight">4 Infantry Bn</div>
             </div>
           </Link>
         </div>

@@ -58,7 +58,7 @@ const empty = (batchCode: string = ""): Omit<Soldier, "id" | "createdAt"> => ({
   dateOfBirth: "",
   gender: "Male",
   nationality: "Ghanaian",
-  unitName: "3rd Infantry Battalion",
+  unitName: "4 Infantry Battalion",
   unit: "Alpha",
   role: "",
   dateEnlisted: "",
