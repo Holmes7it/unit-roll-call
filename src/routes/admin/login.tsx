@@ -71,13 +71,10 @@ function AdminLogin() {
                 </Alert>
               )}
             </CardContent>
-            <CardFooter className="flex flex-col gap-4 pb-8">
+            <CardFooter className="pb-8">
               <Button type="submit" className="w-full font-bold h-11 bg-primary hover:opacity-90">
                 Establish Connection
               </Button>
-              <p className="text-[10px] text-muted-foreground text-center uppercase tracking-widest leading-relaxed">
-                Hint: system default is <code className="bg-muted px-1.5 py-0.5 rounded font-bold text-foreground">unit2024</code>
-              </p>
             </CardFooter>
           </form>
         </Card>
