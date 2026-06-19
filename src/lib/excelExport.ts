@@ -199,8 +199,8 @@ export async function exportSoldiersToExcel(soldiers: Soldier[]): Promise<void> 
           const rIndex = row.number - 1;
 
           worksheet.addImage(imageId, {
-            tl: { col: 0.1, row: rIndex + 0.1 },
-            br: { col: 0.9, row: rIndex + 0.9 },
+            tl: { col: 0.1, row: rIndex + 0.1 } as any,
+            br: { col: 0.9, row: rIndex + 0.9 } as any,
             editAs: "oneCell"
           });
         } catch (e) {
