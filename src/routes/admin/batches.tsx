@@ -55,9 +55,9 @@ function AdminBatches() {
     }
   }, [router]);
 
-  const handleCreate = (e: React.FormEvent) => {
+  const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
-    const result = addBatch(name, code);
+    const result = await addBatch(name, code);
     if (result.ok) {
       toast.success("Batch Created", {
         description: `Batch "${name}" [${code.toUpperCase()}] has been successfully created.`,
@@ -87,15 +87,15 @@ function AdminBatches() {
       });
   };
 
-  const handleToggle = (id: string, name: string) => {
-    toggleBatchStatus(id);
+  const handleToggle = async (id: string, name: string) => {
+    await toggleBatchStatus(id);
     toast.success("Batch Updated", {
       description: `Status for batch "${name}" has been toggled.`,
     });
   };
 
-  const handleDelete = (id: string, name: string) => {
-    const result = deleteBatch(id);
+  const handleDelete = async (id: string, name: string) => {
+    const result = await deleteBatch(id);
     if (result.ok) {
       toast.success("Batch Deleted", {
         description: `Batch "${name}" has been purged from the database.`,

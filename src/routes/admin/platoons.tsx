@@ -61,24 +61,24 @@ function PlatoonsAdmin() {
     );
   }
 
-  const submit = (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const r = addPlatoon(name);
+    const r = await addPlatoon(name);
     if (!r.ok) return toast.error(r.error);
     toast.success(`Unit "${name.trim()}" established.`);
     setName("");
   };
 
-  const saveRename = (oldName: string) => {
-    const r = renamePlatoon(oldName, draft);
+  const saveRename = async (oldName: string) => {
+    const r = await renamePlatoon(oldName, draft);
     if (!r.ok) return toast.error(r.error);
     toast.success(`Unit designation updated to "${draft.trim()}".`);
     setEditing(null);
     setDraft("");
   };
 
-  const remove = (n: string) => {
-    const r = deletePlatoon(n);
+  const remove = async (n: string) => {
+    const r = await deletePlatoon(n);
     if (!r.ok) return toast.error(r.error);
     toast.success(`Unit "${n}" decommissioned.`);
   };

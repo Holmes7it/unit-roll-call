@@ -216,13 +216,13 @@ export function useSoldiers() {
 
   const addSoldier = useCallback(async (s: Soldier) => {
     const row = soldierToRow(s);
-    const { error } = await supabase.from("soldiers").insert(row);
+    const { error } = await supabase.from("soldiers").insert(row as never);
     if (error) { console.error(error); return; }
     notify(SOLDIERS_EVT);
   }, []);
 
   const updateSoldier = useCallback(async (id: string, patch: Partial<Soldier>) => {
-    const { error } = await supabase.from("soldiers").update(soldierToRow(patch)).eq("id", id);
+    const { error } = await supabase.from("soldiers").update(soldierToRow(patch) as never).eq("id", id);
     if (error) { console.error(error); return; }
     notify(SOLDIERS_EVT);
   }, []);
