@@ -14,7 +14,120 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      batches: {
+        Row: {
+          code: string
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+        }
+        Relationships: []
+      }
+      platoons: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      soldiers: {
+        Row: {
+          batch: string
+          blood_type: string
+          contact_phone: string
+          created_at: string
+          date_enlisted: string
+          date_of_birth: string
+          first_name: string
+          gender: string
+          id: string
+          last_name: string
+          nationality: string
+          next_of_kin_name: string
+          next_of_kin_phone: string
+          notes: string
+          photo: string
+          rank: string
+          role: string
+          service_number: string
+          status: string
+          unit: string
+          unit_name: string
+        }
+        Insert: {
+          batch?: string
+          blood_type?: string
+          contact_phone?: string
+          created_at?: string
+          date_enlisted?: string
+          date_of_birth?: string
+          first_name?: string
+          gender?: string
+          id?: string
+          last_name?: string
+          nationality?: string
+          next_of_kin_name?: string
+          next_of_kin_phone?: string
+          notes?: string
+          photo?: string
+          rank?: string
+          role?: string
+          service_number: string
+          status?: string
+          unit?: string
+          unit_name?: string
+        }
+        Update: {
+          batch?: string
+          blood_type?: string
+          contact_phone?: string
+          created_at?: string
+          date_enlisted?: string
+          date_of_birth?: string
+          first_name?: string
+          gender?: string
+          id?: string
+          last_name?: string
+          nationality?: string
+          next_of_kin_name?: string
+          next_of_kin_phone?: string
+          notes?: string
+          photo?: string
+          rank?: string
+          role?: string
+          service_number?: string
+          status?: string
+          unit?: string
+          unit_name?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
