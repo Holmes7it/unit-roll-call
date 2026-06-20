@@ -18,6 +18,7 @@ import {
   CheckCircle,
   XCircle,
   Link as LinkIcon,
+  Loader2,
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -46,6 +47,14 @@ function AdminBatches() {
   const [authChecked, setAuthChecked] = useState(false);
   const [name, setName] = useState("");
   const [code, setCode] = useState("");
+  const [creating, setCreating] = useState(false);
+  const [pendingIds, setPendingIds] = useState<Set<string>>(new Set());
+  const setPending = (id: string, on: boolean) =>
+    setPendingIds((prev) => {
+      const next = new Set(prev);
+      if (on) next.add(id); else next.delete(id);
+      return next;
+    });
 
   useEffect(() => {
     if (!isAdminLoggedIn()) {
@@ -57,17 +66,21 @@ function AdminBatches() {
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
-    const result = await addBatch(name, code);
-    if (result.ok) {
-      toast.success("Batch Created", {
-        description: `Batch "${name}" [${code.toUpperCase()}] has been successfully created.`,
-      });
-      setName("");
-      setCode("");
-    } else {
-      toast.error("Operation Failed", {
-        description: result.error,
-      });
+    if (creating) return;
+    setCreating(true);
+    try {
+      const result = await addBatch(name, code);
+      if (result.ok) {
+        toast.success("Batch Created", {
+          description: `Batch "${name}" [${code.toUpperCase()}] has been successfully created.`,
+        });
+        setName("");
+        setCode("");
+      } else {
+        toast.error("Operation Failed", { description: result.error });
+      }
+    } finally {
+      setCreating(false);
     }
   };
 
@@ -88,28 +101,32 @@ function AdminBatches() {
   };
 
   const handleToggle = async (id: string, name: string) => {
-    const result = await toggleBatchStatus(id);
-    if (result?.ok) {
-      toast.success("Batch Updated", {
-        description: `Status for batch "${name}" has been toggled.`,
-      });
-    } else {
-      toast.error("Operation Failed", {
-        description: result?.error ?? "Could not update this batch.",
-      });
+    if (pendingIds.has(id)) return;
+    setPending(id, true);
+    try {
+      const result = await toggleBatchStatus(id);
+      if (result?.ok) {
+        toast.success("Batch Updated", { description: `Status for batch "${name}" has been toggled.` });
+      } else {
+        toast.error("Operation Failed", { description: result?.error ?? "Could not update this batch." });
+      }
+    } finally {
+      setPending(id, false);
     }
   };
 
   const handleDelete = async (id: string, name: string) => {
-    const result = await deleteBatch(id);
-    if (result.ok) {
-      toast.success("Batch Deleted", {
-        description: `Batch "${name}" has been purged from the database.`,
-      });
-    } else {
-      toast.error("Purge Prevented", {
-        description: result.error,
-      });
+    if (pendingIds.has(id)) return;
+    setPending(id, true);
+    try {
+      const result = await deleteBatch(id);
+      if (result.ok) {
+        toast.success("Batch Deleted", { description: `Batch "${name}" has been purged from the database.` });
+      } else {
+        toast.error("Purge Prevented", { description: result.error });
+      }
+    } finally {
+      setPending(id, false);
     }
   };
 
@@ -175,8 +192,9 @@ function AdminBatches() {
                       className="bg-background/50 border-border/50 font-mono uppercase"
                     />
                   </div>
-                  <Button type="submit" className="w-full bg-primary hover:opacity-90 font-bold h-10 mt-2">
-                    Create Deployment Batch
+                  <Button type="submit" disabled={creating} className="w-full bg-primary hover:opacity-90 font-bold h-10 mt-2 gap-2">
+                    {creating && <Loader2 size={16} className="animate-spin" />}
+                    {creating ? "Creating..." : "Create Deployment Batch"}
                   </Button>
                 </form>
               </CardContent>
@@ -230,6 +248,7 @@ function AdminBatches() {
                             <TableCell>
                               <button
                                 onClick={() => handleToggle(b.id, b.name)}
+                                disabled={pendingIds.has(b.id)}
                                 className="flex items-center gap-1.5 focus:outline-none text-xs font-bold"
                               >
                                 {b.isActive ? (
@@ -258,11 +277,11 @@ function AdminBatches() {
                                   variant="ghost"
                                   size="sm"
                                   onClick={() => handleDelete(b.id, b.name)}
-                                  disabled={count > 0}
+                                  disabled={count > 0 || pendingIds.has(b.id)}
                                   className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive disabled:opacity-30 disabled:cursor-not-allowed"
                                   title={count > 0 ? "Purge blocked: batch contains personnel" : "Purge Batch"}
                                 >
-                                  <Trash2 size={14} />
+                                  {pendingIds.has(b.id) ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
                                 </Button>
                               </div>
                             </TableCell>
