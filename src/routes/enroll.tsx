@@ -73,7 +73,7 @@ const empty = (batchCode: string = ""): Omit<Soldier, "id" | "createdAt"> => ({
 });
 
 function AddSoldier() {
-  const { addSoldier } = useSoldiers();
+  const { addSoldier } = useSoldiers({ load: false });
   const { platoons } = usePlatoons();
   const { batches } = useBatches();
   
@@ -99,7 +99,7 @@ function AddSoldier() {
     if (fileRef.current) fileRef.current.value = "";
   };
 
-  const submit = (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     const soldier: Soldier = {
       id: generateId(),
@@ -107,7 +107,11 @@ function AddSoldier() {
       ...form,
       photo: form.photo || PLACEHOLDER_PHOTO,
     };
-    addSoldier(soldier);
+    const result = await addSoldier(soldier);
+    if (!result?.ok) {
+      toast.error("Enrollment Failed", { description: result?.error ?? "Could not save this personnel record." });
+      return;
+    }
     const msg = `${soldier.rank} ${soldier.lastName} ${soldier.firstName} (${soldier.serviceNumber}) has been successfully enrolled in ${soldier.batch || "Unassigned"}.`;
     toast.success("Enrollment Successful", { description: msg });
     clear();
