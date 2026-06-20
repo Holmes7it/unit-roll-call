@@ -12,6 +12,7 @@ import {
   X,
   ArrowLeft,
   Users2,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -39,6 +40,9 @@ function PlatoonsAdmin() {
   const [name, setName] = useState("");
   const [editing, setEditing] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
+  const [creating, setCreating] = useState(false);
+  const [savingRename, setSavingRename] = useState(false);
+  const [removingName, setRemovingName] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isAdminLoggedIn()) router.navigate({ to: "/admin/login" });
@@ -63,24 +67,42 @@ function PlatoonsAdmin() {
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const r = await addPlatoon(name);
-    if (!r.ok) return toast.error(r.error);
-    toast.success(`Unit "${name.trim()}" established.`);
-    setName("");
+    if (creating) return;
+    setCreating(true);
+    try {
+      const r = await addPlatoon(name);
+      if (!r.ok) return toast.error(r.error);
+      toast.success(`Unit "${name.trim()}" established.`);
+      setName("");
+    } finally {
+      setCreating(false);
+    }
   };
 
   const saveRename = async (oldName: string) => {
-    const r = await renamePlatoon(oldName, draft);
-    if (!r.ok) return toast.error(r.error);
-    toast.success(`Unit designation updated to "${draft.trim()}".`);
-    setEditing(null);
-    setDraft("");
+    if (savingRename) return;
+    setSavingRename(true);
+    try {
+      const r = await renamePlatoon(oldName, draft);
+      if (!r.ok) return toast.error(r.error);
+      toast.success(`Unit designation updated to "${draft.trim()}".`);
+      setEditing(null);
+      setDraft("");
+    } finally {
+      setSavingRename(false);
+    }
   };
 
   const remove = async (n: string) => {
-    const r = await deletePlatoon(n);
-    if (!r.ok) return toast.error(r.error);
-    toast.success(`Unit "${n}" decommissioned.`);
+    if (removingName) return;
+    setRemovingName(n);
+    try {
+      const r = await deletePlatoon(n);
+      if (!r.ok) return toast.error(r.error);
+      toast.success(`Unit "${n}" decommissioned.`);
+    } finally {
+      setRemovingName(null);
+    }
   };
 
   return (
@@ -116,9 +138,9 @@ function PlatoonsAdmin() {
                   className="bg-background/50 border-border/50"
                 />
               </div>
-              <Button type="submit" className="bg-primary hover:opacity-90 font-bold gap-2 px-6">
-                <Plus size={18} />
-                Add Unit
+              <Button type="submit" disabled={creating} className="bg-primary hover:opacity-90 font-bold gap-2 px-6">
+                {creating ? <Loader2 size={18} className="animate-spin" /> : <Plus size={18} />}
+                {creating ? "Adding..." : "Add Unit"}
               </Button>
             </form>
           </CardContent>
@@ -179,9 +201,10 @@ function PlatoonsAdmin() {
                                 size="sm"
                                 variant="outline"
                                 className="h-8 w-8 p-0 border-green-500/50 text-green-500 hover:bg-green-500/10"
+                                disabled={savingRename}
                                 onClick={() => saveRename(p)}
                               >
-                                <Check size={14} />
+                                {savingRename ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />}
                               </Button>
                               <Button
                                 size="sm"
@@ -212,11 +235,11 @@ function PlatoonsAdmin() {
                                 size="sm"
                                 variant="ghost"
                                 className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive"
-                                disabled={count > 0}
+                                disabled={count > 0 || removingName === p}
                                 title={count > 0 ? "Reassign personnel first" : "Decommission unit"}
                                 onClick={() => remove(p)}
                               >
-                                <Trash2 size={14} />
+                                {removingName === p ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
                               </Button>
                             </>
                           )}

@@ -24,6 +24,7 @@ import {
   FileText,
   Save,
   Trash2,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -82,6 +83,7 @@ function AddSoldier() {
   
   const [form, setForm] = useState(() => empty(urlBatch || ""));
   const fileRef = useRef<HTMLInputElement>(null);
+  const [submitting, setSubmitting] = useState(false);
 
   const set = <K extends keyof typeof form>(k: K, v: (typeof form)[K]) =>
     setForm((f) => ({ ...f, [k]: v }));
@@ -118,20 +120,26 @@ function AddSoldier() {
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (submitting) return;
+    setSubmitting(true);
     const soldier: Soldier = {
       id: generateId(),
       createdAt: new Date().toISOString(),
       ...form,
       photo: form.photo || PLACEHOLDER_PHOTO,
     };
-    const result = await addSoldier(soldier);
-    if (!result?.ok) {
-      toast.error("Enrollment Failed", { description: result?.error ?? "Could not save this personnel record." });
-      return;
+    try {
+      const result = await addSoldier(soldier);
+      if (!result?.ok) {
+        toast.error("Enrollment Failed", { description: result?.error ?? "Could not save this personnel record." });
+        return;
+      }
+      const msg = `${soldier.rank} ${soldier.lastName} ${soldier.firstName} (${soldier.serviceNumber}) has been successfully enrolled in ${soldier.batch || "Unassigned"}.`;
+      toast.success("Enrollment Successful", { description: msg });
+      clear();
+    } finally {
+      setSubmitting(false);
     }
-    const msg = `${soldier.rank} ${soldier.lastName} ${soldier.firstName} (${soldier.serviceNumber}) has been successfully enrolled in ${soldier.batch || "Unassigned"}.`;
-    toast.success("Enrollment Successful", { description: msg });
-    clear();
   };
 
   return (
@@ -342,6 +350,7 @@ function AddSoldier() {
               type="button"
               variant="ghost"
               onClick={clear}
+              disabled={submitting}
               className="font-bold gap-2 text-muted-foreground hover:text-destructive"
             >
               <Trash2 size={16} />
@@ -349,10 +358,11 @@ function AddSoldier() {
             </Button>
             <Button
               type="submit"
+              disabled={submitting}
               className="bg-primary hover:opacity-90 font-bold gap-2 px-8 h-12 shadow-lg"
             >
-              <Save size={18} />
-              Commit to Registry
+              {submitting ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
+              {submitting ? "Committing..." : "Commit to Registry"}
             </Button>
           </div>
         </form>

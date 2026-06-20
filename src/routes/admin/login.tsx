@@ -3,7 +3,7 @@ import { useState } from "react";
 import { AppShell } from "@/components/Layout";
 import { storeAdminPassword } from "@/lib/admin-session";
 import { verifyAdminPassword } from "@/lib/registry.functions";
-import { Lock, ShieldCheck, AlertCircle } from "lucide-react";
+import { Lock, ShieldCheck, AlertCircle, Loader2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -17,10 +17,13 @@ export const Route = createFileRoute("/admin/login")({
 function AdminLogin() {
   const [password, setPassword] = useState("");
   const [err, setErr] = useState("");
+  const [submitting, setSubmitting] = useState(false);
   const router = useRouter();
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (submitting) return;
+    setSubmitting(true);
     try {
       const { ok } = await verifyAdminPassword({ data: { password } });
       if (ok) {
@@ -31,6 +34,8 @@ function AdminLogin() {
       }
     } catch {
       setErr("Authentication service unavailable. Please try again.");
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -78,8 +83,9 @@ function AdminLogin() {
               )}
             </CardContent>
             <CardFooter className="pb-8">
-              <Button type="submit" className="w-full font-bold h-11 bg-primary hover:opacity-90">
-                Establish Connection
+              <Button type="submit" disabled={submitting || !password} className="w-full font-bold h-11 bg-primary hover:opacity-90 gap-2">
+                {submitting && <Loader2 size={16} className="animate-spin" />}
+                {submitting ? "Verifying..." : "Establish Connection"}
               </Button>
             </CardFooter>
           </form>

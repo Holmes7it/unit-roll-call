@@ -47,6 +47,7 @@ import {
   Users,
   Trash2,
   AlertTriangle,
+  Loader2,
 } from "lucide-react";
 import {
   Table,
@@ -91,6 +92,7 @@ function AdminDashboard() {
   const [sortKey, setSortKey] = useState<SortKey>("serviceNumber");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
+  const [purging, setPurging] = useState(false);
 
   useEffect(() => {
     if (!isAdminLoggedIn()) {
@@ -165,15 +167,19 @@ function AdminDashboard() {
   };
 
   const purgeAllData = async () => {
-    const result = await purgeRegistry();
-    if (result.ok) {
-      toast.success("System Data Purged", {
-        description: "All personnel records, platoons, and batches have been permanently deleted.",
-      });
-    } else {
-      toast.error("Purge Failed", {
-        description: result.error,
-      });
+    if (purging) return;
+    setPurging(true);
+    try {
+      const result = await purgeRegistry();
+      if (result.ok) {
+        toast.success("System Data Purged", {
+          description: "All personnel records, platoons, and batches have been permanently deleted.",
+        });
+      } else {
+        toast.error("Purge Failed", { description: result.error });
+      }
+    } finally {
+      setPurging(false);
     }
   };
 
@@ -219,8 +225,9 @@ function AdminDashboard() {
                 </AlertDialogHeader>
                 <AlertDialogFooter className="mt-4">
                   <AlertDialogCancel className="font-bold border-border text-xs uppercase tracking-wider">Abort</AlertDialogCancel>
-                  <AlertDialogAction onClick={purgeAllData} className="bg-destructive hover:bg-destructive/90 text-white font-bold text-xs uppercase tracking-wider">
-                    Authorize Purge
+                  <AlertDialogAction onClick={purgeAllData} disabled={purging} className="bg-destructive hover:bg-destructive/90 text-white font-bold text-xs uppercase tracking-wider gap-2">
+                    {purging && <Loader2 size={14} className="animate-spin" />}
+                    {purging ? "Purging..." : "Authorize Purge"}
                   </AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>

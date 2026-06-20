@@ -28,6 +28,7 @@ import {
   Phone,
   FileText,
   Upload,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -69,6 +70,8 @@ function SoldierProfile() {
   const [form, setForm] = useState<Soldier | null>(null);
   const [confirmDel, setConfirmDel] = useState(false);
   const [authChecked, setAuthChecked] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     if (!isAdminLoggedIn()) router.navigate({ to: "/admin/login" });
@@ -139,28 +142,40 @@ function SoldierProfile() {
 
   const save = async () => {
     if (!form) return;
-    const result = await updateSoldier(id, form);
-    if (!result?.ok) {
-      toast.error("Update Failed", { description: result?.error ?? "Could not save this personnel record." });
-      return;
+    if (saving) return;
+    setSaving(true);
+    try {
+      const result = await updateSoldier(id, form);
+      if (!result?.ok) {
+        toast.error("Update Failed", { description: result?.error ?? "Could not save this personnel record." });
+        return;
+      }
+      setEditing(false);
+      toast.success("Profile Updated", {
+        description: `Service record for ${form.rank} ${form.lastName} has been committed.`,
+      });
+    } finally {
+      setSaving(false);
     }
-    setEditing(false);
-    toast.success("Profile Updated", {
-      description: `Service record for ${form.rank} ${form.lastName} has been committed.`,
-    });
   };
 
   const remove = async () => {
+    if (deleting) return;
+    setDeleting(true);
     const name = `${soldier.firstName} ${soldier.lastName}`;
-    const result = await deleteSoldier(id);
-    if (!result?.ok) {
-      toast.error("Delete Failed", { description: result?.error ?? "Could not delete this personnel record." });
-      return;
+    try {
+      const result = await deleteSoldier(id);
+      if (!result?.ok) {
+        toast.error("Delete Failed", { description: result?.error ?? "Could not delete this personnel record." });
+        return;
+      }
+      toast.success("Personnel Removed", {
+        description: `${name} has been purged from the registry.`,
+      });
+      router.navigate({ to: "/admin" });
+    } finally {
+      setDeleting(false);
     }
-    toast.success("Personnel Removed", {
-      description: `${name} has been purged from the registry.`,
-    });
-    router.navigate({ to: "/admin" });
   };
 
   const data = editing && form ? form : soldier;
@@ -206,18 +221,18 @@ function SoldierProfile() {
                   <Edit size={16} />
                   Modify Profile
                 </Button>
-                <Button variant="outline" onClick={() => setConfirmDel(true)} className="font-bold gap-2 text-destructive border-destructive/20 hover:bg-destructive/5 hover:text-destructive hover:border-destructive/50">
-                  <Trash2 size={16} />
+                <Button variant="outline" onClick={() => setConfirmDel(true)} disabled={deleting} className="font-bold gap-2 text-destructive border-destructive/20 hover:bg-destructive/5 hover:text-destructive hover:border-destructive/50">
+                  {deleting ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={16} />}
                   Purge Record
                 </Button>
               </>
             ) : (
               <>
-                <Button onClick={save} className="font-bold gap-2 bg-primary hover:opacity-90">
-                  <Save size={16} />
-                  Commit Changes
+                <Button onClick={save} disabled={saving} className="font-bold gap-2 bg-primary hover:opacity-90">
+                  {saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
+                  {saving ? "Saving..." : "Commit Changes"}
                 </Button>
-                <Button variant="ghost" onClick={() => { setEditing(false); setForm(soldier); }} className="font-bold gap-2">
+                <Button variant="ghost" onClick={() => { setEditing(false); setForm(soldier); }} disabled={saving} className="font-bold gap-2">
                   <X size={16} />
                   Discard
                 </Button>
@@ -340,8 +355,8 @@ function SoldierProfile() {
             </AlertDialogHeader>
             <AlertDialogFooter className="mt-6">
               <AlertDialogCancel className="font-bold">Abort Purge</AlertDialogCancel>
-              <AlertDialogAction onClick={remove} className="bg-destructive hover:bg-destructive/90 font-bold">
-                Confirm Purge
+              <AlertDialogAction onClick={remove} disabled={deleting} className="bg-destructive hover:bg-destructive/90 font-bold">
+                {deleting ? "Purging..." : "Confirm Purge"}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
