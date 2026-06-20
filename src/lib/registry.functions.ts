@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { getRequestHeader } from "@tanstack/react-start/server";
 
 // All data access is funnelled through these server functions. The Supabase
-// tables have RLS enabled with no public policies, so anon/authenticated
+// tables have RLS enabled with deny-all public policies, so anon/authenticated
 // clients cannot reach them directly. Server functions use the service-role
 // client (RLS-bypassing) and verify the admin password on every write and
 // on every soldier read.
