@@ -1,6 +1,6 @@
 import { Link, useRouter } from "@tanstack/react-router";
 import { useState } from "react";
-import { ADMIN_SESSION_KEY, isAdminLoggedIn } from "@/lib/soldiers";
+import { isAdminLoggedIn, clearAdminSession } from "@/lib/admin-session";
 import {
   Home,
   UserPlus,
@@ -20,7 +20,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const loggedIn = typeof window !== "undefined" && isAdminLoggedIn();
 
   const logout = () => {
-    window.sessionStorage.removeItem(ADMIN_SESSION_KEY);
+    clearAdminSession();
     router.navigate({ to: "/admin/login" });
   };
 
