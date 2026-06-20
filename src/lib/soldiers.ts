@@ -1,5 +1,10 @@
 import { useEffect, useState, useCallback } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import {
+  listSoldiers, addSoldierFn, updateSoldierFn, deleteSoldierFn,
+  listPlatoons, addPlatoonFn, renamePlatoonFn, deletePlatoonFn,
+  listBatches, addBatchFn, toggleBatchFn, deleteBatchFn,
+} from "./registry.functions";
+export { isAdminLoggedIn, ADMIN_SESSION_KEY } from "./admin-session";
 
 export type SoldierStatus = "Active" | "On Leave" | "Deployed" | "Discharged" | "Deceased" | "Sick";
 
@@ -245,13 +250,7 @@ export const STATUS_BADGE: Record<SoldierStatus, string> = {
   Sick: "bg-orange-100 text-orange-800 border-orange-300",
 };
 
-export const ADMIN_PASSWORD = "unit2024";
-export const ADMIN_SESSION_KEY = "isAdminLoggedIn";
-
-export function isAdminLoggedIn(): boolean {
-  if (typeof window === "undefined") return false;
-  return window.sessionStorage.getItem(ADMIN_SESSION_KEY) === "true";
-}
+// Admin password validation lives server-side now. See lib/registry.functions.ts.
 
 async function fetchPlatoons(): Promise<string[]> {
   const { data, error } = await supabase.from("platoons").select("name").order("name");
