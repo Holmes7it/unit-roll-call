@@ -198,11 +198,16 @@ function notify(evt: string) {
   if (typeof window !== "undefined") window.dispatchEvent(new Event(evt));
 }
 
-export function useSoldiers() {
+export function useSoldiers(options: { load?: boolean } = {}) {
   const [soldiers, setSoldiers] = useState<Soldier[]>([]);
   const [ready, setReady] = useState(false);
+  const shouldLoad = options.load ?? true;
 
   useEffect(() => {
+    if (!shouldLoad) {
+      setReady(true);
+      return;
+    }
     let cancelled = false;
     const load = () => fetchSoldiers().then((list) => {
       if (!cancelled) { setSoldiers(list); setReady(true); }
@@ -214,7 +219,7 @@ export function useSoldiers() {
       cancelled = true;
       window.removeEventListener(SOLDIERS_EVT, onChange);
     };
-  }, []);
+  }, [shouldLoad]);
 
   const addSoldier = useCallback(async (s: Soldier) => {
     const row = soldierToRow(s) as Record<string, unknown>;
