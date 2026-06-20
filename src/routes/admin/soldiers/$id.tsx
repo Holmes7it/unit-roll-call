@@ -119,18 +119,26 @@ function SoldierProfile() {
     reader.readAsDataURL(file);
   };
 
-  const save = () => {
+  const save = async () => {
     if (!form) return;
-    updateSoldier(id, form);
+    const result = await updateSoldier(id, form);
+    if (!result?.ok) {
+      toast.error("Update Failed", { description: result?.error ?? "Could not save this personnel record." });
+      return;
+    }
     setEditing(false);
     toast.success("Profile Updated", {
       description: `Service record for ${form.rank} ${form.lastName} has been committed.`,
     });
   };
 
-  const remove = () => {
+  const remove = async () => {
     const name = `${soldier.firstName} ${soldier.lastName}`;
-    deleteSoldier(id);
+    const result = await deleteSoldier(id);
+    if (!result?.ok) {
+      toast.error("Delete Failed", { description: result?.error ?? "Could not delete this personnel record." });
+      return;
+    }
     toast.success("Personnel Removed", {
       description: `${name} has been purged from the registry.`,
     });
