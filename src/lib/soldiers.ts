@@ -1,5 +1,10 @@
 import { useEffect, useState, useCallback } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import {
+  listSoldiers, addSoldierFn, updateSoldierFn, deleteSoldierFn,
+  listPlatoons, addPlatoonFn, renamePlatoonFn, deletePlatoonFn,
+  listBatches, addBatchFn, toggleBatchFn, deleteBatchFn,
+} from "./registry.functions";
+export { isAdminLoggedIn, ADMIN_SESSION_KEY } from "./admin-session";
 
 export type SoldierStatus = "Active" | "On Leave" | "Deployed" | "Discharged" | "Deceased" | "Sick";
 
@@ -184,9 +189,10 @@ const _unusedSeed = (): Soldier[] => [
 ];
 
 async function fetchSoldiers(): Promise<Soldier[]> {
-  const { data, error } = await supabase.from("soldiers").select("*").order("created_at", { ascending: true });
-  if (error) { console.error(error); return []; }
-  return (data as SoldierRow[]).map(rowToSoldier);
+  try {
+    const rows = await listSoldiers();
+    return (rows as SoldierRow[]).map(rowToSoldier);
+  } catch (e) { console.error(e); return []; }
 }
 function notify(evt: string) {
   if (typeof window !== "undefined") window.dispatchEvent(new Event(evt));
@@ -204,32 +210,28 @@ export function useSoldiers() {
     load();
     const onChange = () => load();
     window.addEventListener(SOLDIERS_EVT, onChange);
-    const channel = supabase.channel("soldiers-live")
-      .on("postgres_changes", { event: "*", schema: "public", table: "soldiers" }, load)
-      .subscribe();
     return () => {
       cancelled = true;
       window.removeEventListener(SOLDIERS_EVT, onChange);
-      supabase.removeChannel(channel);
     };
   }, []);
 
   const addSoldier = useCallback(async (s: Soldier) => {
-    const row = soldierToRow(s);
-    const { error } = await supabase.from("soldiers").insert(row as never);
-    if (error) { console.error(error); return; }
+    const row = soldierToRow(s) as Record<string, unknown>;
+    const res = await addSoldierFn({ data: { row } });
+    if (!res.ok) { console.error(res.error); return; }
     notify(SOLDIERS_EVT);
   }, []);
 
   const updateSoldier = useCallback(async (id: string, patch: Partial<Soldier>) => {
-    const { error } = await supabase.from("soldiers").update(soldierToRow(patch) as never).eq("id", id);
-    if (error) { console.error(error); return; }
+    const res = await updateSoldierFn({ data: { id, patch: soldierToRow(patch) as Record<string, unknown> } });
+    if (!res.ok) { console.error(res.error); return; }
     notify(SOLDIERS_EVT);
   }, []);
 
   const deleteSoldier = useCallback(async (id: string) => {
-    const { error } = await supabase.from("soldiers").delete().eq("id", id);
-    if (error) { console.error(error); return; }
+    const res = await deleteSoldierFn({ data: { id } });
+    if (!res.ok) { console.error(res.error); return; }
     notify(SOLDIERS_EVT);
   }, []);
 
@@ -245,18 +247,10 @@ export const STATUS_BADGE: Record<SoldierStatus, string> = {
   Sick: "bg-orange-100 text-orange-800 border-orange-300",
 };
 
-export const ADMIN_PASSWORD = "unit2024";
-export const ADMIN_SESSION_KEY = "isAdminLoggedIn";
-
-export function isAdminLoggedIn(): boolean {
-  if (typeof window === "undefined") return false;
-  return window.sessionStorage.getItem(ADMIN_SESSION_KEY) === "true";
-}
+// Admin password validation lives server-side now. See lib/registry.functions.ts.
 
 async function fetchPlatoons(): Promise<string[]> {
-  const { data, error } = await supabase.from("platoons").select("name").order("name");
-  if (error) { console.error(error); return []; }
-  return (data as { name: string }[]).map((r) => r.name);
+  try { return await listPlatoons(); } catch (e) { console.error(e); return []; }
 }
 
 export function usePlatoons() {
@@ -271,53 +265,28 @@ export function usePlatoons() {
     load();
     const onChange = () => load();
     window.addEventListener(PLATOONS_EVT, onChange);
-    const channel = supabase.channel("platoons-live")
-      .on("postgres_changes", { event: "*", schema: "public", table: "platoons" }, load)
-      .subscribe();
     return () => {
       cancelled = true;
       window.removeEventListener(PLATOONS_EVT, onChange);
-      supabase.removeChannel(channel);
     };
   }, []);
 
   const addPlatoon = useCallback(async (name: string) => {
-    const trimmed = name.trim();
-    if (!trimmed) return { ok: false as const, error: "Unit name is required." };
-    const list = await fetchPlatoons();
-    if (list.some((p) => p.toLowerCase() === trimmed.toLowerCase())) {
-      return { ok: false as const, error: "A unit with that name already exists." };
-    }
-    const { error } = await supabase.from("platoons").insert({ name: trimmed });
-    if (error) return { ok: false as const, error: error.message };
-    notify(PLATOONS_EVT);
-    return { ok: true as const };
+    const res = await addPlatoonFn({ data: { name } });
+    if (res.ok) notify(PLATOONS_EVT);
+    return res;
   }, []);
 
   const renamePlatoon = useCallback(async (oldName: string, newName: string) => {
-    const trimmed = newName.trim();
-    if (!trimmed) return { ok: false as const, error: "Unit name is required." };
-    const list = await fetchPlatoons();
-    if (list.some((p) => p.toLowerCase() === trimmed.toLowerCase() && p !== oldName)) {
-      return { ok: false as const, error: "A unit with that name already exists." };
-    }
-    const { error } = await supabase.from("platoons").update({ name: trimmed }).eq("name", oldName);
-    if (error) return { ok: false as const, error: error.message };
-    await supabase.from("soldiers").update({ unit: trimmed }).eq("unit", oldName);
-    notify(PLATOONS_EVT);
-    notify(SOLDIERS_EVT);
-    return { ok: true as const };
+    const res = await renamePlatoonFn({ data: { oldName, newName } });
+    if (res.ok) { notify(PLATOONS_EVT); notify(SOLDIERS_EVT); }
+    return res;
   }, []);
 
   const deletePlatoon = useCallback(async (name: string) => {
-    const { count } = await supabase.from("soldiers").select("id", { count: "exact", head: true }).eq("unit", name);
-    if ((count ?? 0) > 0) {
-      return { ok: false as const, error: `Cannot delete — ${count} soldier(s) are assigned to this unit.` };
-    }
-    const { error } = await supabase.from("platoons").delete().eq("name", name);
-    if (error) return { ok: false as const, error: error.message };
-    notify(PLATOONS_EVT);
-    return { ok: true as const };
+    const res = await deletePlatoonFn({ data: { name } });
+    if (res.ok) notify(PLATOONS_EVT);
+    return res;
   }, []);
 
   return { platoons, ready, addPlatoon, renamePlatoon, deletePlatoon };
@@ -325,10 +294,7 @@ export function usePlatoons() {
 
 // BATCH MANAGEMENT HELPERS
 async function fetchBatches(): Promise<Batch[]> {
-  const { data, error } = await supabase.from("batches").select("*").order("created_at", { ascending: true });
-  if (error) { console.error(error); return []; }
-  return (data as { id: string; name: string; code: string; is_active: boolean; created_at: string }[])
-    .map((r) => ({ id: r.id, name: r.name, code: r.code, isActive: r.is_active, createdAt: r.created_at }));
+  try { return await listBatches(); } catch (e) { console.error(e); return []; }
 }
 
 export function useBatches() {
@@ -343,47 +309,27 @@ export function useBatches() {
     load();
     const onChange = () => load();
     window.addEventListener(BATCHES_EVT, onChange);
-    const channel = supabase.channel("batches-live")
-      .on("postgres_changes", { event: "*", schema: "public", table: "batches" }, load)
-      .subscribe();
     return () => {
       cancelled = true;
       window.removeEventListener(BATCHES_EVT, onChange);
-      supabase.removeChannel(channel);
     };
   }, []);
 
   const addBatch = useCallback(async (name: string, code: string) => {
-    const trimmedName = name.trim();
-    const trimmedCode = code.trim().toUpperCase();
-    if (!trimmedName || !trimmedCode) return { ok: false as const, error: "Name and code are required." };
-    const { error } = await supabase.from("batches").insert({ name: trimmedName, code: trimmedCode, is_active: true });
-    if (error?.code === "23505") {
-      return { ok: false as const, error: `Batch with code "${trimmedCode}" already exists.` };
-    }
-    if (error) return { ok: false as const, error: error.message };
-    notify(BATCHES_EVT);
-    return { ok: true as const };
+    const res = await addBatchFn({ data: { name, code } });
+    if (res.ok) notify(BATCHES_EVT);
+    return res;
   }, []);
 
   const toggleBatchStatus = useCallback(async (id: string) => {
-    const { data } = await supabase.from("batches").select("is_active").eq("id", id).single();
-    if (!data) return;
-    await supabase.from("batches").update({ is_active: !data.is_active }).eq("id", id);
-    notify(BATCHES_EVT);
+    const res = await toggleBatchFn({ data: { id } });
+    if (res.ok) notify(BATCHES_EVT);
   }, []);
 
   const deleteBatch = useCallback(async (id: string) => {
-    const { data: batch } = await supabase.from("batches").select("code").eq("id", id).single();
-    if (!batch) return { ok: false as const, error: "Batch not found." };
-    const { count } = await supabase.from("soldiers").select("id", { count: "exact", head: true }).eq("batch", batch.code);
-    if ((count ?? 0) > 0) {
-      return { ok: false as const, error: `Cannot delete — ${count} soldier(s) are assigned to this batch.` };
-    }
-    const { error } = await supabase.from("batches").delete().eq("id", id);
-    if (error) return { ok: false as const, error: error.message };
-    notify(BATCHES_EVT);
-    return { ok: true as const };
+    const res = await deleteBatchFn({ data: { id } });
+    if (res.ok) notify(BATCHES_EVT);
+    return res;
   }, []);
 
   return { batches, ready, addBatch, toggleBatchStatus, deleteBatch };

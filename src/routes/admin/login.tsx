@@ -1,7 +1,8 @@
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { useState } from "react";
 import { AppShell } from "@/components/Layout";
-import { ADMIN_PASSWORD, ADMIN_SESSION_KEY } from "@/lib/soldiers";
+import { storeAdminPassword } from "@/lib/admin-session";
+import { verifyAdminPassword } from "@/lib/registry.functions";
 import { Lock, ShieldCheck, AlertCircle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -18,13 +19,18 @@ function AdminLogin() {
   const [err, setErr] = useState("");
   const router = useRouter();
 
-  const submit = (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (password === ADMIN_PASSWORD) {
-      window.sessionStorage.setItem(ADMIN_SESSION_KEY, "true");
-      router.navigate({ to: "/admin/overview" });
-    } else {
-      setErr("Incorrect access code. Please verify credentials.");
+    try {
+      const { ok } = await verifyAdminPassword({ data: { password } });
+      if (ok) {
+        storeAdminPassword(password);
+        router.navigate({ to: "/admin/overview" });
+      } else {
+        setErr("Incorrect access code. Please verify credentials.");
+      }
+    } catch {
+      setErr("Authentication service unavailable. Please try again.");
     }
   };
 
