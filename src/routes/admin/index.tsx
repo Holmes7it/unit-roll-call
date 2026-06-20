@@ -23,6 +23,7 @@ import {
   STATUS_BADGE,
   toCSV,
   formatDate,
+  purgeRegistry,
   type Soldier,
   type SoldierStatus,
 } from "@/lib/soldiers";
@@ -163,19 +164,17 @@ function AdminDashboard() {
     }
   };
 
-  const purgeAllData = () => {
-    localStorage.setItem("unit_registry_soldiers", JSON.stringify([]));
-    localStorage.setItem("unit_registry_platoons", JSON.stringify([]));
-    localStorage.setItem("unit_registry_batches", JSON.stringify([]));
-
-    // Trigger updates
-    window.dispatchEvent(new Event("unit_registry_change"));
-    window.dispatchEvent(new Event("unit_registry_platoons_change"));
-    window.dispatchEvent(new Event("unit_registry_batches_change"));
-
-    toast.success("System Data Purged", {
-      description: "All personnel records, platoons, and batches have been permanently deleted.",
-    });
+  const purgeAllData = async () => {
+    const result = await purgeRegistry();
+    if (result.ok) {
+      toast.success("System Data Purged", {
+        description: "All personnel records, platoons, and batches have been permanently deleted.",
+      });
+    } else {
+      toast.error("Purge Failed", {
+        description: result.error,
+      });
+    }
   };
 
   if (!authChecked || !ready) {
