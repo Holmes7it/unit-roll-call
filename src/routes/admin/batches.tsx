@@ -88,10 +88,16 @@ function AdminBatches() {
   };
 
   const handleToggle = async (id: string, name: string) => {
-    await toggleBatchStatus(id);
-    toast.success("Batch Updated", {
-      description: `Status for batch "${name}" has been toggled.`,
-    });
+    const result = await toggleBatchStatus(id);
+    if (result?.ok) {
+      toast.success("Batch Updated", {
+        description: `Status for batch "${name}" has been toggled.`,
+      });
+    } else {
+      toast.error("Operation Failed", {
+        description: result?.error ?? "Could not update this batch.",
+      });
+    }
   };
 
   const handleDelete = async (id: string, name: string) => {
