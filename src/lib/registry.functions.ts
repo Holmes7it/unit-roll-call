@@ -25,6 +25,16 @@ async function admin() {
   return supabaseAdmin;
 }
 
+const SOLDIER_COLUMNS = new Set([
+  "service_number", "rank", "last_name", "first_name", "date_of_birth", "gender",
+  "nationality", "unit_name", "unit", "role", "date_enlisted", "status", "blood_type",
+  "contact_phone", "next_of_kin_name", "next_of_kin_phone", "notes", "photo", "batch",
+]);
+
+function cleanSoldierRow(row: Record<string, unknown>) {
+  return Object.fromEntries(Object.entries(row).filter(([key]) => SOLDIER_COLUMNS.has(key)));
+}
+
 // ---------- Auth ----------
 export const verifyAdminPassword = createServerFn({ method: "POST" })
   .inputValidator((d: { password: string }) => d)
@@ -165,7 +175,7 @@ export const addSoldierFn = createServerFn({ method: "POST" })
   .inputValidator((d: { row: Record<string, unknown> }) => d)
   .handler(async ({ data }) => {
     const sb = await admin();
-    const { error } = await sb.from("soldiers").insert(data.row as never);
+    const { error } = await sb.from("soldiers").insert(cleanSoldierRow(data.row) as never);
     if (error) return { ok: false as const, error: error.message };
     return { ok: true as const };
   });
@@ -175,7 +185,7 @@ export const updateSoldierFn = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     requireAdmin();
     const sb = await admin();
-    const { error } = await sb.from("soldiers").update(data.patch as never).eq("id", data.id);
+    const { error } = await sb.from("soldiers").update(cleanSoldierRow(data.patch) as never).eq("id", data.id);
     if (error) return { ok: false as const, error: error.message };
     return { ok: true as const };
   });
@@ -189,3 +199,15 @@ export const deleteSoldierFn = createServerFn({ method: "POST" })
     if (error) return { ok: false as const, error: error.message };
     return { ok: true as const };
   });
+
+export const purgeRegistryFn = createServerFn({ method: "POST" }).handler(async () => {
+  requireAdmin();
+  const sb = await admin();
+  const soldierDelete = await sb.from("soldiers").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+  if (soldierDelete.error) return { ok: false as const, error: soldierDelete.error.message };
+  const platoonDelete = await sb.from("platoons").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+  if (platoonDelete.error) return { ok: false as const, error: platoonDelete.error.message };
+  const batchDelete = await sb.from("batches").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+  if (batchDelete.error) return { ok: false as const, error: batchDelete.error.message };
+  return { ok: true as const };
+});
