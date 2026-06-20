@@ -73,7 +73,7 @@ const empty = (batchCode: string = ""): Omit<Soldier, "id" | "createdAt"> => ({
 });
 
 function AddSoldier() {
-  const { addSoldier } = useSoldiers();
+  const { addSoldier } = useSoldiers({ load: false });
   const { platoons } = usePlatoons();
   const { batches } = useBatches();
   
