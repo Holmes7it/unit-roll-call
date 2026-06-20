@@ -115,7 +115,25 @@ function SoldierProfile() {
     const file = e.target.files?.[0];
     if (!file || !form) return;
     const reader = new FileReader();
-    reader.onload = () => setForm({ ...form, photo: String(reader.result) });
+    reader.onload = () => {
+      const raw = String(reader.result);
+      const img = new Image();
+      img.onload = () => {
+        const MAX = 512;
+        const scale = Math.min(1, MAX / Math.max(img.width, img.height));
+        const w = Math.round(img.width * scale);
+        const h = Math.round(img.height * scale);
+        const canvas = document.createElement("canvas");
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) { setForm({ ...form, photo: raw }); return; }
+        ctx.drawImage(img, 0, 0, w, h);
+        setForm({ ...form, photo: canvas.toDataURL("image/jpeg", 0.82) });
+      };
+      img.onerror = () => setForm({ ...form, photo: raw });
+      img.src = raw;
+    };
     reader.readAsDataURL(file);
   };
 
